@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Reservas;
+use Illuminate\Support\Facades\Validator;
+
+class ReservasController extends Controller
+{
+    // Listar todas las reservas
+    public function index()
+    {
+        $reservas = Reservas::all();
+        return response()->json($reservas);
+    }
+
+    // Crear una reserva
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'idUsuario'        => 'required|integer|exists:usuarios,id',
+            'idActividad'      => 'required|integer|exists:actividades,id',
+            'Fecha_Reserva'    => 'required|date',
+            'Numero_Personas'  => 'required|integer|min:1',
+            'Estado'           => 'required|string|in:pendiente,confirmada,cancelada',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $reserva = Reservas::create($validator->validated());
+        return response()->json($reserva, 201);
+    }
+
+    // Mostrar una reserva por ID
+    public function show(string $id)
+    {
+        $reserva = Reservas::find($id);
+
+        if (!$reserva) {
+            return response()->json(['message' => 'Reserva no encontrada'], 404);
+        }
+
+        return response()->json($reserva);
+    }
+
+    // Actualizar una reserva
+    public function update(Request $request, string $id)
+    {
+        $reserva = Reservas::find($id);
+
+        if (!$reserva) {
+            return response()->json(['message' => 'Reserva no encontrada para editar'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'idUsuario'        => 'integer|exists:usuarios,id',
+            'idActividad'      => 'integer|exists:actividades,id',
+            'Fecha_Reserva'    => 'date',
+            'Numero_Personas'  => 'integer|min:1',
+            'Estado'           => 'string|in:pendiente,confirmada,cancelada',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $reserva->update($validator->validated());
+        return response()->json($reserva);
+    }
+
+    // Eliminar una reserva
+    public function destroy(string $id)
+    {
+        $reserva = Reservas::find($id);
+
+        if (!$reserva) {
+            return response()->json(['message' => 'Reserva no encontrada para eliminar'], 404);
+        }
+
+        $reserva->delete();
+        return response()->json(['message' => 'Reserva eliminada con éxito']);
+    }
+}
