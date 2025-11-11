@@ -16,6 +16,15 @@ class AdministradorController extends Controller
     public function index()
     {
         try {
+            // Verificar permiso para ver administradores
+            $admin = JWTAuth::user();
+            if (!$admin->tienePermiso('ver_administradores')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para ver administradores',
+                ], 403);
+            }
+
             $administradores = Administrador::all();
             return response()->json([
                 'success' => true,
@@ -35,6 +44,15 @@ class AdministradorController extends Controller
      */
     public function store(Request $request)
     {
+        // Verificar permiso para crear administradores
+        $admin = JWTAuth::user();
+        if (!$admin->tienePermiso('crear_administradores')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para crear administradores',
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), Administrador::rules());
 
         if ($validator->fails()) {
@@ -89,6 +107,15 @@ class AdministradorController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Verificar permiso para editar administradores
+        $admin = JWTAuth::user();
+        if (!$admin->tienePermiso('editar_administradores')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para editar administradores',
+            ], 403);
+        }
+
         try {
             $administrador = Administrador::findOrFail($id);
 
@@ -129,6 +156,15 @@ class AdministradorController extends Controller
      */
     public function destroy($id)
     {
+        // Verificar permiso para eliminar administradores
+        $admin = JWTAuth::user();
+        if (!$admin->tienePermiso('eliminar_administradores')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para eliminar administradores',
+            ], 403);
+        }
+
         try {
             $administrador = Administrador::findOrFail($id);
             $administrador->delete();

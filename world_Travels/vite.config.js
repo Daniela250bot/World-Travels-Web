@@ -5,7 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     server: {
         host: '127.0.0.1',
-        cors: true,
+        port: 5173,
+        cors: {
+            origin: ['http://127.0.0.1:8000', 'http://localhost:8000'],
+            credentials: true,
+        },
     },
     plugins: [
         laravel({

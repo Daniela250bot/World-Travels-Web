@@ -15,12 +15,14 @@ class Empresa extends Authenticatable implements JWTSubject
         'direccion',
         'ciudad',
         'correo',
-        'contraseña'
+        'contraseña',
+        'codigo_verificacion'
     ];
 
     protected $hidden = [
         'contraseña',
         'remember_token',
+        'codigo_verificacion',
     ];
 
     // Métodos requeridos por JWT
@@ -52,6 +54,12 @@ class Empresa extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
+    // Método para generar código de verificación
+    public static function generarCodigoVerificacion()
+    {
+        return strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+    }
+
     // Reglas de validación
     public static function rules($id = null)
     {
@@ -61,7 +69,8 @@ class Empresa extends Authenticatable implements JWTSubject
             'direccion' => 'required|string|max:255',
             'ciudad' => 'required|string|max:255',
             'correo' => 'required|string|email|max:255|unique:empresas,correo,' . $id,
-            'contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8'
+            'contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8',
+            'codigo_verificacion' => 'required|string|size:8|unique:empresas,codigo_verificacion,' . $id
         ];
     }
 }

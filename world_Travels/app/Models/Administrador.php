@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\DB;
 
 class Administrador extends Authenticatable implements JWTSubject
 {
@@ -15,12 +16,14 @@ class Administrador extends Authenticatable implements JWTSubject
         'correo_electronico',
         'telefono',
         'documento',
-        'contraseña'
+        'contraseña',
+        'codigo_verificacion'
     ];
 
     protected $hidden = [
         'contraseña',
         'remember_token',
+        'codigo_verificacion',
     ];
 
     // Métodos requeridos por JWT
@@ -52,6 +55,38 @@ class Administrador extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
+    // Relación con permisos
+    public function permisos()
+    {
+        return Permiso::whereHas('roles', function($query) {
+            $query->where('rol', 'administrador');
+        })->get();
+    }
+
+    // Método para verificar si tiene un permiso específico
+    public function tienePermiso($permisoNombre)
+    {
+        return $this->permisos()->where('nombre', $permisoNombre)->exists();
+    }
+
+    // Método para verificar si tiene permisos en un módulo
+    public function tienePermisosEnModulo($modulo)
+    {
+        return $this->permisos()->where('modulo', $modulo)->exists();
+    }
+
+    // Método para obtener todos los permisos del administrador
+    public function obtenerPermisos()
+    {
+        return $this->permisos;
+    }
+
+    // Método para generar código de verificación
+    public static function generarCodigoVerificacion()
+    {
+        return strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+    }
+
     // Reglas de validación
     public static function rules($id = null)
     {
@@ -61,7 +96,8 @@ class Administrador extends Authenticatable implements JWTSubject
             'correo_electronico' => 'required|string|email|max:255|unique:administradores,correo_electronico,' . $id,
             'telefono' => 'required|string|max:20',
             'documento' => 'required|string|max:20|unique:administradores,documento,' . $id,
-            'contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8'
+            'contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8',
+            'codigo_verificacion' => 'required|string|size:8|unique:administradores,codigo_verificacion,' . $id
         ];
     }
 }

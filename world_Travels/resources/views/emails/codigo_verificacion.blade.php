@@ -12,7 +12,7 @@
             Hola,
         </p>
         <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Has solicitado registrarte como Guía Turístico en WORLD TRAVELS. Para completar tu registro, utiliza el siguiente código de verificación:
+            Has solicitado registrarte como Empresa de Viajes en WORLD TRAVELS. Para completar tu registro, utiliza el siguiente código de verificación:
         </p>
         <div style="text-align: center; margin: 30px 0;">
             <span style="display: inline-block; background-color: #007bff; color: #ffffff; font-size: 24px; font-weight: bold; padding: 15px 30px; border-radius: 5px; letter-spacing: 2px;">

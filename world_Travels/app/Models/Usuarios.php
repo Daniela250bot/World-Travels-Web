@@ -17,14 +17,12 @@ class Usuarios extends Authenticatable implements JWTSubject
         'Telefono',
         'Nacionalidad',
         'Fecha_Registro',
-        'Rol',
-        'codigo_verificacion'
+        'Rol'
     ];
 
     protected $hidden = [
         'Contraseña',
         'remember_token',
-        'codigo_verificacion',
     ];
 
     // Métodos requeridos por JWT
@@ -71,5 +69,25 @@ class Usuarios extends Authenticatable implements JWTSubject
     public function getAuthIdentifier()
     {
         return $this->getKey();
+    }
+
+    // Método para generar código de verificación (no usado para turistas)
+    public static function generarCodigoVerificacion()
+    {
+        return strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+    }
+
+    // Reglas de validación
+    public static function rules($id = null)
+    {
+        return [
+            'Nombre' => 'required|string|max:255',
+            'Apellido' => 'required|string|max:255',
+            'Email' => 'required|string|email|max:255|unique:usuarios,Email,' . $id,
+            'Contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8',
+            'Telefono' => 'required|string|max:20',
+            'Nacionalidad' => 'required|string|max:255',
+            'Rol' => 'required|in:Turista,Guía Turístico,Administrador'
+        ];
     }
 }

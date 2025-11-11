@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuarios;
+use App\Models\Administrador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -96,17 +97,49 @@ class AuthController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-        $credentials = $request->only('Email', 'Contraseña');
-        if (! $token = JWTAuth::attempt($credentials)) {
-            return response()->json([
-               'success' => false,
-                 'message' => 'Credenciales inválidas',
-            ], 401);
+        // Autenticación manual: intentar en usuarios primero
+        $user = Usuarios::where('Email', $request->Email)->first();
+
+        if ($user && Hash::check($request->Contraseña, $user->Contraseña)) {
+            try {
+                $token = JWTAuth::fromUser($user);
+                return response()->json([
+                    'success' => true,
+                    'token' => $token,
+                    'rol' => $user->Rol ?? 'Turista',
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error creando token JWT',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
         }
+
+        // Si no está en usuarios, intentar autenticar como Administrador
+        $admin = Administrador::where('correo_electronico', $request->Email)->first();
+        if ($admin && Hash::check($request->Contraseña, $admin->contraseña)) {
+            try {
+                $token = JWTAuth::fromUser($admin);
+                return response()->json([
+                    'success' => true,
+                    'token' => $token,
+                    'rol' => 'Administrador',
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error creando token JWT',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
+        }
+
         return response()->json([
-            'success' => true,
-            'token' => $token,
-        ]);
+            'success' => false,
+            'message' => 'Credenciales inválidas',
+        ], 401);
     }
 
     public function logout(){
