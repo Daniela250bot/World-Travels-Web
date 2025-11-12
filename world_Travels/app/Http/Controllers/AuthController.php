@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuarios;
 use App\Models\Administrador;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -97,35 +98,24 @@ class AuthController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-        // Autenticación manual: intentar en usuarios primero
-        $user = Usuarios::where('Email', $request->Email)->first();
 
-        if ($user && Hash::check($request->Contraseña, $user->Contraseña)) {
+        // Buscar usuario en tabla users (centralizada)
+        $user = User::where('email', $request->Email)->first();
+
+        if ($user && Hash::check($request->Contraseña, $user->password)) {
             try {
                 $token = JWTAuth::fromUser($user);
                 return response()->json([
                     'success' => true,
                     'token' => $token,
-                    'rol' => $user->Rol ?? 'Turista',
-                ], 200);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error creando token JWT',
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
-        }
-
-        // Si no está en usuarios, intentar autenticar como Administrador
-        $admin = Administrador::where('correo_electronico', $request->Email)->first();
-        if ($admin && Hash::check($request->Contraseña, $admin->contraseña)) {
-            try {
-                $token = JWTAuth::fromUser($admin);
-                return response()->json([
-                    'success' => true,
-                    'token' => $token,
-                    'rol' => 'Administrador',
+                    'usuario' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'verificado' => $user->verificado,
+                    ],
+                    'rol' => $user->role,
                 ], 200);
             } catch (\Exception $e) {
                 return response()->json([
@@ -161,9 +151,17 @@ class AuthController extends Controller
 
     public function me ()
     {
+        $user = JWTAuth::user();
+
+        // Obtener datos adicionales según el rol
+        $additionalData = [];
+        if ($user->userable) {
+            $additionalData = $user->userable->toArray();
+        }
+
         return response()->json([
             'success' => true,
-            'usuario' => JWTAuth::user(),
+            'usuario' => array_merge($user->toArray(), $additionalData),
         ], 200);
     }
 

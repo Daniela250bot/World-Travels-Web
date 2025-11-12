@@ -10,6 +10,7 @@ class Usuarios extends Authenticatable implements JWTSubject
     protected $table = 'usuarios';
 
     protected $fillable = [
+        'user_id',
         'Nombre',
         'Apellido',
         'Email',
@@ -17,12 +18,14 @@ class Usuarios extends Authenticatable implements JWTSubject
         'Telefono',
         'Nacionalidad',
         'Fecha_Registro',
-        'Rol'
+        'Rol',
+        'codigo_verificacion'
     ];
 
     protected $hidden = [
         'Contraseña',
         'remember_token',
+        'codigo_verificacion',
     ];
 
     // Métodos requeridos por JWT
@@ -39,6 +42,12 @@ class Usuarios extends Authenticatable implements JWTSubject
      public function reservas()
     {
         return $this->hasMany(Reservas::class, 'idUsuario');
+    }
+
+    // Relación con User (uno a uno)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // Relación: un usuario puede crear muchas actividades
@@ -70,6 +79,7 @@ class Usuarios extends Authenticatable implements JWTSubject
     {
         return $this->getKey();
     }
+
 
     // Método para generar código de verificación (no usado para turistas)
     public static function generarCodigoVerificacion()

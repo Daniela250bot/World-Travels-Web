@@ -65,18 +65,9 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Determinar si es administrador o usuario regular basado en el email o algún indicador
-            const isAdmin = email.includes('admin') || email.includes('administrator'); // Lógica simple para detectar admin
+            const requestData = { Email: email, Contraseña: password };
 
-            const loginUrl = isAdmin
-                ? 'http://127.0.0.1:8000/api/administradores/login'
-                : 'http://127.0.0.1:8000/api/login';
-
-            const requestData = isAdmin
-                ? { correo_electronico: email, contraseña: password }
-                : { Email: email, Contraseña: password };
-
-            fetch(loginUrl, {
+            fetch('http://127.0.0.1:8000/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

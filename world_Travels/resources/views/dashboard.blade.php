@@ -57,7 +57,7 @@
         });
 
         function loadUserData() {
-            fetch('/api/me', {
+            fetch('http://127.0.0.1:8000/api/me', {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
@@ -82,7 +82,7 @@
 
             if (role === 'Turista') {
                 // Estadísticas para turista
-                fetch('/api/listarReservas', {
+                fetch('http://127.0.0.1:8000/api/listarReservas', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
@@ -109,7 +109,7 @@
                 });
             } else if (role === 'Guía Turístico') {
                 // Estadísticas para guía
-                fetch('/api/listarActividades', {
+                fetch('http://127.0.0.1:8000/api/listarActividades', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
@@ -136,9 +136,9 @@
             } else if (role === 'Administrador') {
                 // Estadísticas para administrador
                 Promise.all([
-                    fetch('/api/listarUsuarios').then(r => r.json()),
-                    fetch('/api/listarActividades').then(r => r.json()),
-                    fetch('/api/listarReservas').then(r => r.json())
+                    fetch('http://127.0.0.1:8000/api/listarUsuarios').then(r => r.json()),
+                    fetch('http://127.0.0.1:8000/api/listarActividades').then(r => r.json()),
+                    fetch('http://127.0.0.1:8000/api/listarReservas').then(r => r.json())
                 ])
                 .then(([usuarios, actividades, reservas]) => {
                     statsSection.innerHTML = `
@@ -225,7 +225,7 @@
             const listSection = document.getElementById('list-section');
 
             if (role === 'Turista') {
-                fetch('/api/listarReservas', {
+                fetch('http://127.0.0.1:8000/api/listarReservas', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
@@ -252,7 +252,7 @@
                     listSection.innerHTML = html;
                 });
             } else if (role === 'Guía Turístico') {
-                fetch('/api/listarActividades', {
+                fetch('http://127.0.0.1:8000/api/listarActividades', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
@@ -280,7 +280,7 @@
                     listSection.innerHTML = html;
                 });
             } else if (role === 'Administrador') {
-                fetch('/api/listarUsuarios', {
+                fetch('http://127.0.0.1:8000/api/listarUsuarios', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }

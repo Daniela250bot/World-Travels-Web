@@ -10,6 +10,7 @@ class Empresa extends Authenticatable implements JWTSubject
     protected $table = 'empresas';
 
     protected $fillable = [
+        'user_id',
         'numero',
         'nombre',
         'direccion',
@@ -52,6 +53,12 @@ class Empresa extends Authenticatable implements JWTSubject
     public function getAuthIdentifier()
     {
         return $this->getKey();
+    }
+
+    // Relación con User (uno a uno)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // Método para generar código de verificación

@@ -129,7 +129,7 @@
             // Mostrar mensaje de carga
             actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500 text-lg">Cargando actividades...</p>';
 
-            fetch('/api/listarActividades')
+            fetch('http://127.0.0.1:8000/api/listarActividades')
                 .then(response => response.json())
                 .then(data => {
                     actividadesList.innerHTML = ''; // Limpiar mensaje de carga

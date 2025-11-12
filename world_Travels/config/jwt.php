@@ -295,7 +295,7 @@ return [
         */
 
         'user' => [
-            'provider' => 'usuarios',
+            'provider' => 'users',
         ],
 
         'administrador' => [

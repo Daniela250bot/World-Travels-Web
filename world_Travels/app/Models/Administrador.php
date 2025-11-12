@@ -11,6 +11,7 @@ class Administrador extends Authenticatable implements JWTSubject
     protected $table = 'administradores';
 
     protected $fillable = [
+        'user_id',
         'nombre',
         'apellido',
         'correo_electronico',
@@ -53,6 +54,12 @@ class Administrador extends Authenticatable implements JWTSubject
     public function getAuthIdentifier()
     {
         return $this->getKey();
+    }
+
+    // Relación con User (uno a uno)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // Relación con permisos

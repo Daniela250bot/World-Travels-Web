@@ -90,14 +90,14 @@
         });
 
         function loadAllActivities() {
-            fetch('/api/listarActividades')
+            fetch('http://127.0.0.1:8000/api/listarActividades')
                 .then(response => response.json())
                 .then(data => displayActivities(data))
                 .catch(error => console.error('Error cargando actividades:', error));
         }
 
         function searchActivities(query) {
-            fetch('/api/listarActividades')
+            fetch('http://127.0.0.1:8000/api/listarActividades')
                 .then(response => response.json())
                 .then(data => {
                     const filtered = data.filter(activity =>
