@@ -53,7 +53,10 @@
                 <a href="{{ route('search') }}" class="mr-4">Buscar Actividades</a>
                 @auth
                     <a href="{{ route('dashboard') }}" class="mr-4">Mi Dashboard</a>
-                    <a href="{{ route('logout') }}">Cerrar Sesión</a>
+                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="bg-transparent border-none cursor-pointer text-white hover:text-gray-300">Cerrar Sesión</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="mr-4">Iniciar Sesión</a>
                     <a href="{{ route('register') }}">Registrarse</a>

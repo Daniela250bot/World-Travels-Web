@@ -8,9 +8,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Mail\CodigoVerificacionMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -88,11 +90,36 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'Email' => 'required|string|email',
-            'Contraseña' => 'required|string|min:8',
+        Log::info('Login attempt', [
+            'all_data' => $request->all(),
+            'headers' => $request->headers->all(),
+            'content_type' => $request->header('Content-Type'),
+            'raw_content' => $request->getContent()
         ]);
+
+        // Primero intentar con campos en minúscula (estándar)
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        // Si falla, probar con campos en mayúscula (legacy)
         if ($validator->fails()) {
+            $legacyValidator = Validator::make($request->all(), [
+                'Email' => 'required|string|email',
+                'Contraseña' => 'required|string|min:8',
+            ]);
+            if (!$legacyValidator->fails()) {
+                // Usar los campos en mayúscula
+                $request->merge([
+                    'email' => $request->Email,
+                    'password' => $request->Contraseña,
+                ]);
+                $validator = $legacyValidator;
+            }
+        }
+        if ($validator->fails()) {
+            Log::warning('Login validation failed', ['errors' => $validator->errors()]);
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors(),
@@ -100,10 +127,13 @@ class AuthController extends Controller
         }
 
         // Buscar usuario en tabla users (centralizada)
-        $user = User::where('email', $request->Email)->first();
+        $user = User::where('email', $request->email)->first();
 
-        if ($user && Hash::check($request->Contraseña, $user->password)) {
+        if ($user && Hash::check($request->password, $user->password)) {
             try {
+                // Autenticar al usuario en la sesión web de Laravel
+                Auth::login($user);
+
                 $token = JWTAuth::fromUser($user);
                 return response()->json([
                     'success' => true,
@@ -130,6 +160,61 @@ class AuthController extends Controller
             'success' => false,
             'message' => 'Credenciales inválidas',
         ], 401);
+    }
+
+    public function webLogin(Request $request)
+    {
+        Log::info('Web login attempt', [
+            'email' => $request->email,
+            'has_password' => !empty($request->password)
+        ]);
+
+        // Primero intentar con campos en minúscula (estándar)
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        // Si falla, probar con campos en mayúscula (legacy)
+        if ($validator->fails()) {
+            $legacyValidator = Validator::make($request->all(), [
+                'Email' => 'required|string|email',
+                'Contraseña' => 'required|string|min:8',
+            ]);
+            if (!$legacyValidator->fails()) {
+                // Usar los campos en mayúscula
+                $request->merge([
+                    'email' => $request->Email,
+                    'password' => $request->Contraseña,
+                ]);
+                $validator = $legacyValidator;
+            }
+        }
+
+        if ($validator->fails()) {
+            Log::warning('Web login validation failed', ['errors' => $validator->errors()]);
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // Buscar usuario en tabla users (centralizada)
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
+            // Autenticar al usuario en la sesión web de Laravel
+            Auth::login($user);
+
+            Log::info('Web login successful', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'user_role' => $user->role
+            ]);
+
+            // Redirigir al dashboard
+            return redirect()->route('dashboard');
+        }
+
+        Log::warning('Web login failed: invalid credentials', ['email' => $request->email]);
+        return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
     }
 
     public function logout(){

@@ -23,7 +23,7 @@ class JwtMiddleware
             return response()->json(['error' => 'Token inválido o expirado'], 401);
         }
 
-        if ($roles && $usuario->Rol !== $roles) {
+        if ($roles && $usuario->role !== $roles) {
             return response()->json(['error' => 'Acceso denegado. No tienes el rol necesario'], 403);
         }
 

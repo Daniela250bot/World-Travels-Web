@@ -16,7 +16,6 @@ use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Middleware\JwtMiddleware;
-use Illuminate\Container\Attributes\Auth;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -45,7 +44,7 @@ use Illuminate\Container\Attributes\Auth;
         Route::get('me', [AuthController::class, 'me']);
     });
 
-    Route::group(['middleware' => [JwtMiddleware::class . ':Administrador']], function () {
+    Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::post('crearDepartamentos', [DepartamentosController::class, 'store']);
     Route::get('departamentos/{id}', [DepartamentosController::class, 'show']);
     Route::put('actualizarDepartamentos/{id}', [DepartamentosController::class, 'update']);

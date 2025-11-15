@@ -21,31 +21,13 @@ class RegistroController extends Controller
      */
     public function registrar(Request $request)
     {
-        // Forzar el parseo de JSON directamente desde el contenido raw
-        $rawContent = $request->getContent();
-        Log::info('Contenido raw recibido:', ['content' => $rawContent]);
+        // Usar request->all() directamente para obtener los datos
+        $data = $request->all();
 
-        // El contenido parece estar llegando como JSON con un campo 'content' que contiene un string
-        $jsonData = json_decode($rawContent, true);
+        Log::info('Datos recibidos con request->all():', $data);
 
-        if ($jsonData && isset($jsonData['content'])) {
-            // Extraer el string del campo 'content' y convertirlo a objeto
-            $contentString = $jsonData['content'];
-
-            // Remover las comillas simples externas si existen
-            $contentString = trim($contentString, "'");
-
-            // Parsear el string como objeto JavaScript (convertir : a => y agregar comillas)
-            $data = $this->parseJavaScriptObject($contentString);
-        } else {
-            // Intentar parseo normal
-            $data = json_decode($rawContent, true);
-        }
-
-        Log::info('Datos parseados:', ['data' => $data]);
-
-        if (!$data || !is_array($data)) {
-            Log::error('Error: No se pudo parsear los datos');
+        if (!$data || !is_array($data) || empty($data)) {
+            Log::error('Error: No se pudieron obtener los datos del request');
             return response()->json([
                 'success' => false,
                 'message' => 'Error en el formato de los datos',
@@ -242,26 +224,26 @@ class RegistroController extends Controller
     /**
      * Registro de turista
      */
-    private function registrarTurista(Request $request)
+    private function registrarTurista($data)
     {
-        return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($data) {
             // Crear registro específico en usuarios PRIMERO
             $turista = Usuarios::create([
-                'Nombre' => $request->nombre,
-                'Apellido' => $request->apellido,
-                'Email' => $request->email,
-                'Contraseña' => Hash::make($request->contraseña),
-                'Telefono' => $request->telefono,
-                'Nacionalidad' => $request->nacionalidad,
+                'Nombre' => $data['nombre'],
+                'Apellido' => $data['apellido'],
+                'Email' => $data['email'],
+                'Contraseña' => Hash::make($data['contraseña']),
+                'Telefono' => $data['telefono'],
+                'Nacionalidad' => $data['nacionalidad'],
                 'Fecha_Registro' => now(),
                 'Rol' => 'Turista',
             ]);
 
             // Crear usuario en tabla users DESPUÉS
             $user = User::create([
-                'name' => $request->nombre . ' ' . $request->apellido,
-                'email' => $request->email,
-                'password' => Hash::make($request->contraseña),
+                'name' => $data['nombre'] . ' ' . $data['apellido'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['contraseña']),
                 'role' => 'turista',
                 'userable_type' => Usuarios::class,
                 'userable_id' => $turista->id, // Ahora sí existe

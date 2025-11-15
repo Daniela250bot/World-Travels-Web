@@ -15,7 +15,10 @@
             <nav class="space-x-6">
                 <a href="{{ route('home') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('logout') }}" class="text-gray-700 hover:text-blue-600 transition">Cerrar Sesión</a>
+                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
+                </form>
             </nav>
         </div>
     </header>

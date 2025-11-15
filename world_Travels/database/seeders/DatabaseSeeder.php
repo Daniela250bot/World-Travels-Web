@@ -17,48 +17,81 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ejecutar el seeder de permisos primero
+        echo "Verificando usuarios existentes...\n";
+
+        // Verificar usuarios en tabla users
+        $users = User::all();
+        echo "Usuarios en tabla users: " . $users->count() . "\n";
+        foreach ($users as $user) {
+            echo "- ID: {$user->id}, Email: {$user->email}, Role: " . ($user->role ?? 'NULL') . "\n";
+        }
+
+        // Verificar administradores
+        $admins = \App\Models\Administrador::all();
+        echo "\nAdministradores: " . $admins->count() . "\n";
+        foreach ($admins as $admin) {
+            echo "- ID: {$admin->id}, Email: {$admin->correo_electronico}, UserID: " . ($admin->user_id ?? 'NULL') . "\n";
+        }
+
+        // Verificar empresas
+        $empresas = \App\Models\Empresa::all();
+        echo "\nEmpresas: " . $empresas->count() . "\n";
+        foreach ($empresas as $empresa) {
+            echo "- ID: {$empresa->id}, Email: {$empresa->correo}, UserID: " . ($empresa->user_id ?? 'NULL') . "\n";
+        }
+
+        // Verificar turistas
+        $turistas = \App\Models\Usuarios::all();
+        echo "\nTuristas: " . $turistas->count() . "\n";
+        foreach ($turistas as $turista) {
+            echo "- ID: {$turista->id}, Email: {$turista->Email}, Rol: {$turista->Rol}, UserID: " . ($turista->user_id ?? 'NULL') . "\n";
+        }
+
+        echo "\nCreando usuarios de prueba para login...\n";
+
+        // Crear usuario administrador en tabla users
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@test.com'],
+            [
+                'name' => 'Administrador',
+                'password' => bcrypt('password123'),
+                'role' => 'administrador',
+                'verificado' => true
+            ]
+        );
+        echo "Usuario administrador creado: {$adminUser->email}\n";
+
+        // Crear usuario empresa en tabla users
+        $empresaUser = User::firstOrCreate(
+            ['email' => 'empresa@test.com'],
+            [
+                'name' => 'Empresa Test',
+                'password' => bcrypt('password123'),
+                'role' => 'empresa',
+                'verificado' => true
+            ]
+        );
+        echo "Usuario empresa creado: {$empresaUser->email}\n";
+
+        // Crear usuario turista en tabla users
+        $turistaUser = User::firstOrCreate(
+            ['email' => 'turista@test.com'],
+            [
+                'name' => 'Turista Test',
+                'password' => bcrypt('password123'),
+                'role' => 'turista',
+                'verificado' => true
+            ]
+        );
+        echo "Usuario turista creado: {$turistaUser->email}\n";
+
+        echo "\nUsuarios disponibles para login:\n";
+        echo "- admin@test.com / password123 (Administrador)\n";
+        echo "- empresa@test.com / password123 (Empresa)\n";
+        echo "- turista@test.com / password123 (Turista)\n";
+
+        // Ejecutar el seeder de permisos
         $this->call(PermisosSeeder::class);
-
-        // User::factory(10)->create();
-
-        $user = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test' . time() . '@example.com',
-        ]);
-
-        // Crear usuario en la tabla usuarios
-        $usuario = \App\Models\Usuarios::create([
-            'Nombre' => 'Admin',
-            'Apellido' => 'Sistema',
-            'Email' => 'admin@example.com',
-            'Contraseña' => bcrypt('password'),
-            'Telefono' => '123456789',
-            'Nacionalidad' => 'Colombia',
-            'Rol' => 'Administrador'
-        ]);
-
-        // Crear usuario guía turístico
-        $guia = \App\Models\Usuarios::create([
-            'Nombre' => 'Guía',
-            'Apellido' => 'Turístico',
-            'Email' => 'guia@example.com',
-            'Contraseña' => bcrypt('password'),
-            'Telefono' => '987654321',
-            'Nacionalidad' => 'Colombia',
-            'Rol' => 'Guía Turístico'
-        ]);
-
-        // Crear usuario turista
-        $turista = \App\Models\Usuarios::create([
-            'Nombre' => 'Turista',
-            'Apellido' => 'Ejemplo',
-            'Email' => 'turista@example.com',
-            'Contraseña' => bcrypt('password'),
-            'Telefono' => '555666777',
-            'Nacionalidad' => 'Colombia',
-            'Rol' => 'Turista'
-        ]);
 
         // Crear departamento de Boyacá
         $boyaca = \App\Models\Departamentos::create([

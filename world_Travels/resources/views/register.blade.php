@@ -262,7 +262,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al registrarse. Revisa la consola para más detalles.');
+                alert('Error al registrarse.');
                 document.getElementById('message').innerText = 'Error al registrarse';
             });
         });

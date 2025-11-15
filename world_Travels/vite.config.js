@@ -7,9 +7,10 @@ export default defineConfig({
         host: '127.0.0.1',
         port: 5173,
         cors: {
-            origin: ['http://127.0.0.1:8000', 'http://localhost:8000'],
+            origin: ['http://127.0.0.1:8000', 'http://localhost:8000', 'http://127.0.0.1:5174', 'http://localhost:5174'],
             credentials: true,
         },
+        hmr: false, // Deshabilitar HMR para evitar problemas de WebSocket
     },
     plugins: [
         laravel({
