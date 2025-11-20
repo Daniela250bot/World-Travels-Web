@@ -10,7 +10,7 @@ export default defineConfig({
             origin: ['http://127.0.0.1:8000', 'http://localhost:8000', 'http://127.0.0.1:5174', 'http://localhost:5174'],
             credentials: true,
         },
-        hmr: false, // Deshabilitar HMR para evitar problemas de WebSocket
+        hmr: false,
     },
     plugins: [
         laravel({
@@ -19,4 +19,20 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'chart-js': ['chart.js'],
+                    'axios': ['axios']
+                }
+            }
+        }
+    },
+    optimizeDeps: {
+        include: ['chart.js', 'axios']
+    },
+    esbuild: {
+        target: 'es2020'
+    }
 });

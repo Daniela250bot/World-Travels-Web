@@ -34,16 +34,30 @@ class DashboardController extends Controller
             'user_email' => $user->email
         ]);
 
+        // Priorizar token de sesión flash, luego generar uno nuevo
+        $jwtToken = session('jwt_token');
+        if (!$jwtToken) {
+            try {
+                $jwtToken = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
+                Log::info('Generated new JWT token for dashboard', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('Error generating JWT token', ['error' => $e->getMessage()]);
+                $jwtToken = null;
+            }
+        } else {
+            Log::info('Using existing JWT token from session', ['user_id' => $user->id]);
+        }
+
         switch ($user->role) {
             case 'administrador':
                 Log::info('Redirecting to dashboard-administrador');
-                return view('dashboard-administrador');
+                return view('dashboard-administrador', compact('jwtToken'));
             case 'empresa':
                 Log::info('Redirecting to dashboard-empresa');
-                return view('dashboard-empresa');
+                return view('dashboard-empresa', compact('jwtToken'));
             case 'turista':
                 Log::info('Redirecting to dashboard-turista');
-                return view('dashboard-turista');
+                return view('dashboard-turista', compact('jwtToken'));
             default:
                 Log::warning('Unknown role: ' . $user->role . ', redirecting to home');
                 return redirect()->route('home');

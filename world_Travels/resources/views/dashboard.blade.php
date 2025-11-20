@@ -13,7 +13,7 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
             <nav class="space-x-6">
-                <a href="{{ route('home') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
+                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
@@ -46,6 +46,37 @@
     </main>
 
     <script>
+        // Guardar el token JWT en localStorage después del login
+        @if(session('jwt_token'))
+            localStorage.setItem('token', '{{ session("jwt_token") }}');
+        @endif
+
+        // Función auxiliar para hacer fetch con manejo automático de errores 401
+        function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                window.location.href = '{{ route("login") }}';
+                return Promise.reject(new Error('No token found'));
+            }
+
+            const headers = {
+                'Authorization': 'Bearer ' + token,
+                ...options.headers
+            };
+
+            return fetch(url, { ...options, headers })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                        localStorage.removeItem('token');
+                        window.location.href = '{{ route("login") }}';
+                        throw new Error('Unauthorized');
+                    }
+                    return response;
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {

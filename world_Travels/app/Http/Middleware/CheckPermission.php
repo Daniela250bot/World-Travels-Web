@@ -4,9 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Administrador;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\DB;
 
 class CheckPermission
@@ -19,24 +18,33 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        // Obtener el usuario autenticado (administrador)
-        $admin = Auth::guard('admin')->user();
+        try {
+            // Obtener el usuario autenticado via JWT
+            $user = JWTAuth::parseToken()->authenticate();
 
-        if (!$admin) {
-            return response()->json(['error' => 'No autenticado'], 401);
+            if (!$user) {
+                return response()->json(['error' => 'No autenticado'], 401);
+            }
+
+            // Verificar si el usuario es administrador
+            if ($user->role !== 'administrador') {
+                return response()->json(['error' => 'Acceso denegado. Solo administradores pueden realizar esta acción'], 403);
+            }
+
+            // Verificar si el administrador tiene el permiso requerido
+            $hasPermission = DB::table('roles_permisos')
+                ->join('permisos', 'roles_permisos.permiso_id', '=', 'permisos.id')
+                ->where('roles_permisos.rol', 'administrador')
+                ->where('permisos.nombre', $permission)
+                ->exists();
+
+            if (!$hasPermission) {
+                return response()->json(['error' => 'No tienes permisos para realizar esta acción'], 403);
+            }
+
+            return $next($request);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Token inválido o expirado: ' . $e->getMessage()], 401);
         }
-
-        // Verificar si el administrador tiene el permiso requerido
-        $hasPermission = DB::table('roles_permisos')
-            ->join('permisos', 'roles_permisos.permiso_id', '=', 'permisos.id')
-            ->where('roles_permisos.rol', 'administrador')
-            ->where('permisos.nombre', $permission)
-            ->exists();
-
-        if (!$hasPermission) {
-            return response()->json(['error' => 'No tienes permisos para realizar esta acción'], 403);
-        }
-
-        return $next($request);
     }
 }

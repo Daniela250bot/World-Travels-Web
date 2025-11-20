@@ -89,6 +89,16 @@
         </div>
     </section>
 
+    <!-- Categorías -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Categorías de Actividades</h2>
+            <div id="categories-section" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <!-- Categorías se cargarán aquí -->
+            </div>
+        </div>
+    </section>
+
     <!-- Destinos principales / actividades destacadas -->
     <section id="actividades" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
@@ -402,7 +412,77 @@
             }
         }
 
+        // Función para cargar categorías
+        function loadCategories() {
+            fetch('http://127.0.0.1:8000/api/categories/active')
+                .then(response => response.json())
+                .then(data => {
+                    const categoriesSection = document.getElementById('categories-section');
+                    categoriesSection.innerHTML = '';
+
+                    if (data.length === 0) {
+                        categoriesSection.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay categorías disponibles</p>';
+                        return;
+                    }
+
+                    data.forEach(category => {
+                        const categoryDiv = document.createElement('div');
+                        categoryDiv.className = 'text-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer';
+                        categoryDiv.onclick = () => filterByCategory(category.id);
+                        categoryDiv.innerHTML = `
+                            ${category.imagen ? `<img src="${category.imagen}" alt="${category.nombre}" class="w-12 h-12 mx-auto mb-2 object-cover rounded">` : '<div class="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded flex items-center justify-center"><span class="text-blue-600 text-sm">📁</span></div>'}
+                            <h3 class="text-sm font-semibold text-gray-800">${category.nombre}</h3>
+                        `;
+                        categoriesSection.appendChild(categoryDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error cargando categorías:', error);
+                    document.getElementById('categories-section').innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar categorías</p>';
+                });
+        }
+
+        // Función para filtrar actividades por categoría
+        function filterByCategory(categoryId) {
+            const actividadesList = document.getElementById('actividades-list');
+            actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500 text-lg">Cargando actividades filtradas...</p>';
+
+            fetch(`http://127.0.0.1:8000/api/listarActividades?categoria=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    actividadesList.innerHTML = '';
+
+                    if (data.length === 0) {
+                        actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay actividades en esta categoría</p>';
+                        return;
+                    }
+
+                    data.forEach(actividad => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
+                        div.innerHTML = `
+                            <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" alt="${actividad.Nombre_Actividad}" class="w-full h-48 object-cover">
+                            <div class="p-6">
+                                <h3 class="text-2xl font-bold mb-2 text-gray-800">${actividad.Nombre_Actividad}</h3>
+                                <p class="text-gray-600 mb-4">${actividad.Descripcion}</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-2xl font-bold text-blue-600">$${actividad.Precio}</span>
+                                    <span class="text-sm text-gray-500">${actividad.Ubicacion}</span>
+                                </div>
+                                <button onclick="window.location.href='{{ route('search') }}'" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Ver Más</button>
+                            </div>
+                        `;
+                        actividadesList.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error cargando actividades filtradas:', error);
+                    actividadesList.innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar actividades</p>';
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
             const actividadesList = document.getElementById('actividades-list');
 
             // Mostrar mensaje de carga

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->unsignedInteger('Cupo_Maximo');
             $table->string('Ubicacion');
             $table->string('Imagen');
-            $table->foreignId('idCategoria')->constrained('categorias__actividades')->onDelete('cascade');
+            $table->foreignId('idCategoria')->constrained('categories')->onDelete('cascade');
             $table->foreignId('idMunicipio')->constrained('municipios')->onDelete('cascade');
             $table->foreignId('idUsuario')->constrained('usuarios')->onDelete('cascade');
             $table->timestamps();

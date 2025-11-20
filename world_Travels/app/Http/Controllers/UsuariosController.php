@@ -56,13 +56,13 @@ class UsuariosController extends Controller
         }
 
          $validator = Validator::make($request->all(),[
-         'Nombre'=> 'string|max:255',
-         'Apellido'=> 'string|max:255',
-         'Email'=> 'string|email|max:255|unique:usuarios,email,'.$id,
-         'Contraseña'=> 'string|min:8',
-         'Telefono'=> 'string|max:20',
-         'Nacionalidad'=> 'string|max:255',
-         'Rol'=> 'string|in:Turista,Guía Turístico,Administrador',
+         'Nombre'=> 'nullable|string|max:255',
+         'Apellido'=> 'nullable|string|max:255',
+         'Email'=> 'nullable|string|email|max:255|unique:usuarios,email,'.$id,
+         'Contraseña'=> 'nullable|string|min:8',
+         'Telefono'=> 'nullable|string|max:20',
+         'Nacionalidad'=> 'nullable|string|max:255',
+         'Rol'=> 'nullable|string|in:Turista,Guía Turístico,Administrador',
         ]);
         
 
@@ -71,8 +71,10 @@ class UsuariosController extends Controller
         }
 
         $data = $validator->validated();
-        if (isset($data['Contraseña'])) {
+        if (!empty($data['Contraseña'])) {
             $data['Contraseña'] = bcrypt($data['Contraseña']);
+        } else {
+            unset($data['Contraseña']);
         }
         $usuarios->update($data);
         return response()->json($usuarios); 

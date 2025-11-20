@@ -13,11 +13,15 @@ class Empresa extends Authenticatable implements JWTSubject
         'user_id',
         'numero',
         'nombre',
+        'descripcion',
         'direccion',
         'ciudad',
         'correo',
         'contraseña',
-        'codigo_verificacion'
+        'codigo_verificacion',
+        'politicas',
+        'telefono',
+        'sitio_web'
     ];
 
     protected $hidden = [
@@ -61,6 +65,24 @@ class Empresa extends Authenticatable implements JWTSubject
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Relación con empleados (usuarios asociados)
+    public function empleados()
+    {
+        return $this->hasMany(Usuarios::class, 'empresa_id');
+    }
+
+    // Relación con actividades
+    public function actividades()
+    {
+        return $this->hasMany(Actividades::class, 'empresa_id');
+    }
+
+    // Relación con permisos (si hay tabla intermedia)
+    public function permisos()
+    {
+        return $this->belongsToMany(Permiso::class, 'empresa_permisos', 'empresa_id', 'permiso_id');
+    }
+
     // Método para generar código de verificación
     public static function generarCodigoVerificacion()
     {
@@ -73,11 +95,15 @@ class Empresa extends Authenticatable implements JWTSubject
         return [
             'numero' => 'required|string|max:20|unique:empresas,numero,' . $id,
             'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string|max:1000',
             'direccion' => 'required|string|max:255',
             'ciudad' => 'required|string|max:255',
             'correo' => 'required|string|email|max:255|unique:empresas,correo,' . $id,
             'contraseña' => $id ? 'nullable|string|min:8' : 'required|string|min:8',
-            'codigo_verificacion' => 'required|string|size:8|unique:empresas,codigo_verificacion,' . $id
+            'codigo_verificacion' => 'required|string|size:8|unique:empresas,codigo_verificacion,' . $id,
+            'politicas' => 'nullable|string|max:2000',
+            'telefono' => 'nullable|string|max:20',
+            'sitio_web' => 'nullable|url|max:255'
         ];
     }
 }

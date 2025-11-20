@@ -11,6 +11,7 @@ class Usuarios extends Authenticatable implements JWTSubject
 
     protected $fillable = [
         'user_id',
+        'empresa_id',
         'Nombre',
         'Apellido',
         'Email',
@@ -48,6 +49,12 @@ class Usuarios extends Authenticatable implements JWTSubject
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relación con Empresa (si es empleado)
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
     // Relación: un usuario puede crear muchas actividades

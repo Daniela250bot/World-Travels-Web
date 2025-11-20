@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class EmpresaController extends Controller
 {
@@ -130,7 +132,34 @@ class EmpresaController extends Controller
     public function destroy($id)
     {
         try {
-            $empresa = Empresa::findOrFail($id);
+            $empresa = Empresa::with('empleados', 'actividades.reservas')->findOrFail($id);
+
+            // Validaciones de seguridad antes de eliminar
+            $tieneEmpleados = $empresa->empleados->count() > 0;
+            $tieneActividadesConReservas = $empresa->actividades->filter(function($actividad) {
+                return $actividad->reservas->count() > 0;
+            })->count() > 0;
+
+            if ($tieneEmpleados || $tieneActividadesConReservas) {
+                $errores = [];
+                if ($tieneEmpleados) {
+                    $errores[] = "La empresa tiene {$empresa->empleados->count()} empleado(s) asignado(s)";
+                }
+                if ($tieneActividadesConReservas) {
+                    $actividadesConReservas = $empresa->actividades->filter(function($actividad) {
+                        return $actividad->reservas->count() > 0;
+                    });
+                    $errores[] = "La empresa tiene {$actividadesConReservas->count()} actividad(es) con reservas activas";
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la empresa debido a las siguientes restricciones:',
+                    'restricciones' => $errores,
+                ], 422);
+            }
+
+            // Si pasa las validaciones, proceder con la eliminación
             $empresa->delete();
 
             return response()->json([
@@ -166,7 +195,7 @@ class EmpresaController extends Controller
         $credentials = $request->only('correo', 'contraseña');
 
         try {
-            if (!$token = JWTAuth::attempt($credentials, ['provider' => 'empresas'])) {
+            if (!$token = JWTAuth::attempt($credentials, false, 'api-empresas')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Credenciales inválidas',
@@ -213,14 +242,816 @@ class EmpresaController extends Controller
     public function me()
     {
         try {
+            $empresa = JWTAuth::user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            // Verificar que la empresa existe en la base de datos
+            $empresaVerificada = Empresa::find($empresa->id);
+            if (!$empresaVerificada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada en la base de datos',
+                ], 404);
+            }
+
             return response()->json([
                 'success' => true,
-                'empresa' => JWTAuth::user(),
+                'empresa' => [
+                    'id' => $empresa->id,
+                    'numero' => $empresa->numero,
+                    'nombre' => $empresa->nombre,
+                    'descripcion' => $empresa->descripcion,
+                    'direccion' => $empresa->direccion,
+                    'ciudad' => $empresa->ciudad,
+                    'correo' => $empresa->correo,
+                    'telefono' => $empresa->telefono,
+                    'sitio_web' => $empresa->sitio_web,
+                    'user_id' => $empresa->user_id,
+                    'fecha_registro' => $empresa->created_at,
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener información de la empresa',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Asignar empleado a empresa
+     */
+    public function asignarEmpleado(Request $request, $empresaId)
+    {
+        $validator = Validator::make($request->all(), [
+            'usuario_id' => 'required|exists:usuarios,id',
+            'rol' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $empresa = Empresa::findOrFail($empresaId);
+            $usuario = \App\Models\Usuarios::findOrFail($request->usuario_id);
+
+            $usuario->update([
+                'empresa_id' => $empresaId,
+                'Rol' => $request->rol,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado asignado exitosamente',
+                'data' => $usuario,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar empleado',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener empleados de una empresa
+     */
+    public function empleados($empresaId)
+    {
+        try {
+            $empresa = Empresa::findOrFail($empresaId);
+            $empleados = $empresa->empleados;
+
+            return response()->json([
+                'success' => true,
+                'data' => $empleados,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener empleados',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar reporte detallado de empresa
+     */
+    public function reporte($empresaId)
+    {
+        try {
+            $empresa = Empresa::with(['empleados', 'actividades.reservas', 'actividades.categoria', 'actividades.municipio'])->findOrFail($empresaId);
+
+            $actividades = $empresa->actividades->map(function($actividad) {
+                $reservasCount = $actividad->reservas->count();
+                $ingresos = $reservasCount * $actividad->Precio;
+                return [
+                    'id' => $actividad->id,
+                    'nombre' => $actividad->Nombre_Actividad,
+                    'fecha' => $actividad->Fecha_Actividad,
+                    'hora' => $actividad->Hora_Actividad,
+                    'precio' => $actividad->Precio,
+                    'cupo_maximo' => $actividad->Cupo_Maximo,
+                    'ubicacion' => $actividad->Ubicacion,
+                    'categoria' => $actividad->categoria ? $actividad->categoria->nombre : 'N/A',
+                    'municipio' => $actividad->municipio ? $actividad->municipio->Nombre_Municipio : 'N/A',
+                    'reservas_count' => $reservasCount,
+                    'ingresos' => $ingresos,
+                    'ocupacion_porcentaje' => $actividad->Cupo_Maximo > 0 ? round(($reservasCount / $actividad->Cupo_Maximo) * 100, 2) : 0,
+                ];
+            });
+
+            $empleados = $empresa->empleados->map(function($empleado) {
+                return [
+                    'id' => $empleado->id,
+                    'nombre' => $empleado->Nombre . ' ' . $empleado->Apellido,
+                    'email' => $empleado->Email,
+                    'rol' => $empleado->Rol,
+                    'telefono' => $empleado->Telefono,
+                ];
+            });
+
+            $totalReservas = $actividades->sum('reservas_count');
+            $totalIngresos = $actividades->sum('ingresos');
+            $promedioOcupacion = $actividades->avg('ocupacion_porcentaje');
+
+            $reporte = [
+                'empresa' => [
+                    'id' => $empresa->id,
+                    'numero' => $empresa->numero,
+                    'nombre' => $empresa->nombre,
+                    'descripcion' => $empresa->descripcion,
+                    'direccion' => $empresa->direccion,
+                    'ciudad' => $empresa->ciudad,
+                    'correo' => $empresa->correo,
+                    'telefono' => $empresa->telefono,
+                    'sitio_web' => $empresa->sitio_web,
+                    'fecha_registro' => $empresa->created_at,
+                ],
+                'estadisticas' => [
+                    'total_empleados' => $empleados->count(),
+                    'total_actividades' => $actividades->count(),
+                    'total_reservas' => $totalReservas,
+                    'total_ingresos' => $totalIngresos,
+                    'promedio_ocupacion' => round($promedioOcupacion, 2),
+                    'actividades_activas' => $actividades->where('fecha', '>=', now()->toDateString())->count(),
+                ],
+                'actividades' => $actividades,
+                'empleados' => $empleados,
+                'resumen_mensual' => $this->generarResumenMensual($actividades),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $reporte,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar reporte',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar resumen mensual de actividades
+     */
+    private function generarResumenMensual($actividades)
+    {
+        $resumen = [];
+        $actividadesPorMes = $actividades->groupBy(function($actividad) {
+            return Carbon::parse($actividad['fecha'])->format('Y-m');
+        });
+
+        foreach ($actividadesPorMes as $mes => $acts) {
+            $resumen[$mes] = [
+                'mes' => $mes,
+                'actividades' => $acts->count(),
+                'reservas' => $acts->sum('reservas_count'),
+                'ingresos' => $acts->sum('ingresos'),
+            ];
+        }
+
+        return array_values($resumen);
+    }
+
+    /**
+     * Listar actividades de la empresa autenticada
+     */
+    public function listarActividades()
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividades = $empresa->actividades()->with('categoria', 'municipio', 'reservas')->get();
+
+            $actividadesFormateadas = $actividades->map(function($actividad) {
+                return [
+                    'id' => $actividad->id,
+                    'nombre' => $actividad->Nombre_Actividad,
+                    'descripcion' => $actividad->Descripcion,
+                    'fecha' => $actividad->Fecha_Actividad,
+                    'hora' => $actividad->Hora_Actividad,
+                    'precio' => $actividad->Precio,
+                    'cupo_maximo' => $actividad->Cupo_Maximo,
+                    'ubicacion' => $actividad->Ubicacion,
+                    'imagen' => $actividad->Imagen,
+                    'categoria' => $actividad->categoria ? $actividad->categoria->nombre : 'N/A',
+                    'municipio' => $actividad->municipio ? $actividad->municipio->Nombre_Municipio : 'N/A',
+                    'total_reservas' => $actividad->reservas->count(),
+                    'disponibilidad' => $actividad->Cupo_Maximo - $actividad->reservas->count(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividadesFormateadas,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar actividades',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear actividad para la empresa autenticada
+     */
+    public function crearActividad(Request $request, $empresaId = null)
+    {
+        $validator = Validator::make($request->all(), [
+            'idCategoria' => 'required|integer|exists:categories,id',
+            'idMunicipio' => 'required|integer|exists:municipios,id',
+            'Nombre_Actividad' => 'required|string|max:255',
+            'Descripcion' => 'required|string',
+            'Fecha_Actividad' => 'required|date|after:today',
+            'Hora_Actividad' => 'required|string',
+            'Precio' => 'required|numeric|min:0',
+            'Cupo_Maximo' => 'required|integer|min:1',
+            'Ubicacion' => 'required|string|max:255',
+            'Imagen' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Obtener la empresa directamente del token JWT
+            $empresa = JWTAuth::user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            // Verificar que la empresa existe en la base de datos (doble verificación)
+            $empresaVerificada = Empresa::find($empresa->id);
+            if (!$empresaVerificada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada en la base de datos',
+                ], 404);
+            }
+
+            $data = $request->all();
+            $data['empresa_id'] = $empresa->id;
+            // Asignar el usuario de la empresa como creador
+            $data['idUsuario'] = $empresa->user_id ?? 1;
+
+            $actividad = \App\Models\Actividades::create($data);
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividad,
+                'message' => 'Actividad creada exitosamente',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear actividad: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile()),
+            ], 500);
+        }
+    }
+
+    /**
+     * Ver detalles de una actividad de la empresa autenticada
+     */
+    public function verActividad($actividadId)
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividad = $empresa->actividades()->with('categoria', 'municipio', 'reservas.usuario')->findOrFail($actividadId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividad,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Actividad no encontrada',
+                'error' => $e->getMessage(),
+            ], 404);
+        }
+    }
+
+    /**
+     * Actualizar actividad de la empresa autenticada
+     */
+    public function actualizarActividad(Request $request, $actividadId)
+    {
+        $validator = Validator::make($request->all(), [
+            'idCategoria' => 'nullable|integer|exists:categories,id',
+            'idMunicipio' => 'nullable|integer|exists:municipios,id',
+            'Nombre_Actividad' => 'nullable|string|max:255',
+            'Descripcion' => 'nullable|string',
+            'Fecha_Actividad' => 'nullable|date',
+            'Hora_Actividad' => 'nullable|string',
+            'Precio' => 'nullable|numeric|min:0',
+            'Cupo_Maximo' => 'nullable|integer|min:1',
+            'Ubicacion' => 'nullable|string|max:255',
+            'Imagen' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividad = $empresa->actividades()->findOrFail($actividadId);
+
+            $actividad->update($request->all());
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividad,
+                'message' => 'Actividad actualizada exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar actividad',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar actividad de la empresa autenticada
+     */
+    public function eliminarActividad($actividadId)
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividad = $empresa->actividades()->findOrFail($actividadId);
+
+            // Verificar si tiene reservas activas
+            $reservasActivas = $actividad->reservas()->where('Estado', 'confirmada')->count();
+            if ($reservasActivas > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la actividad porque tiene reservas confirmadas',
+                ], 422);
+            }
+
+            $actividad->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Actividad eliminada exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar actividad',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar reservas de actividades de la empresa autenticada
+     */
+    public function listarReservas()
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $reservas = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {
+                $query->where('empresa_id', $empresa->id);
+            })->with('actividad', 'usuario')->get();
+
+            $reservasFormateadas = $reservas->map(function($reserva) {
+                return [
+                    'id' => $reserva->id,
+                    'fecha_reserva' => $reserva->Fecha_Reserva,
+                    'numero_personas' => $reserva->Numero_Personas,
+                    'estado' => $reserva->Estado,
+                    'actividad' => [
+                        'id' => $reserva->actividad->id,
+                        'nombre' => $reserva->actividad->Nombre_Actividad,
+                        'fecha' => $reserva->actividad->Fecha_Actividad,
+                        'precio' => $reserva->actividad->Precio,
+                    ],
+                    'usuario' => [
+                        'id' => $reserva->usuario->id,
+                        'nombre' => $reserva->usuario->Nombre . ' ' . $reserva->usuario->Apellido,
+                        'email' => $reserva->usuario->Email,
+                    ],
+                    'total' => $reserva->Numero_Personas * $reserva->actividad->Precio,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $reservasFormateadas,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar reservas',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirmar reserva
+     */
+    public function confirmarReserva($reservaId)
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $reserva = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {
+                $query->where('empresa_id', $empresa->id);
+            })->findOrFail($reservaId);
+
+            $reserva->update(['Estado' => 'confirmada']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reserva confirmada exitosamente',
+                'data' => $reserva,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al confirmar reserva',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancelar reserva
+     */
+    public function cancelarReserva($reservaId)
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $reserva = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {
+                $query->where('empresa_id', $empresa->id);
+            })->findOrFail($reservaId);
+
+            $reserva->update(['Estado' => 'cancelada']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reserva cancelada exitosamente',
+                'data' => $reserva,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cancelar reserva',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear actividad usando rutas estándar (para empresas)
+     */
+    public function crearActividadEmpresa(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'idCategoria' => 'required|integer|exists:categories,id',
+            'idMunicipio' => 'required|integer|exists:municipios,id',
+            'Nombre_Actividad' => 'required|string|max:255',
+            'Descripcion' => 'required|string',
+            'Fecha_Actividad' => 'required|date|after:today',
+            'Hora_Actividad' => 'required|string',
+            'Precio' => 'required|numeric|min:0',
+            'Cupo_Maximo' => 'required|integer|min:1',
+            'Ubicacion' => 'required|string|max:255',
+            'Imagen' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $empresa = JWTAuth::user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            // Verificar que la empresa existe en la base de datos
+            $empresaVerificada = Empresa::find($empresa->id);
+            if (!$empresaVerificada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada en la base de datos',
+                ], 404);
+            }
+
+            $data = $request->all();
+            $data['empresa_id'] = $empresa->id;
+            $data['idUsuario'] = $empresa->user_id ?? 1;
+
+            $actividad = \App\Models\Actividades::create($data);
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividad,
+                'message' => 'Actividad creada exitosamente',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear actividad: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile()),
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar actividad usando rutas estándar (para empresas)
+     */
+    public function actualizarActividadEmpresa(Request $request, $actividadId)
+    {
+        $validator = Validator::make($request->all(), [
+            'idCategoria' => 'nullable|integer|exists:categories,id',
+            'idMunicipio' => 'nullable|integer|exists:municipios,id',
+            'Nombre_Actividad' => 'nullable|string|max:255',
+            'Descripcion' => 'nullable|string',
+            'Fecha_Actividad' => 'nullable|date',
+            'Hora_Actividad' => 'nullable|string',
+            'Precio' => 'nullable|numeric|min:0',
+            'Cupo_Maximo' => 'nullable|integer|min:1',
+            'Ubicacion' => 'nullable|string|max:255',
+            'Imagen' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividad = $empresa->actividades()->findOrFail($actividadId);
+
+            $actividad->update($request->all());
+
+            return response()->json([
+                'success' => true,
+                'data' => $actividad,
+                'message' => 'Actividad actualizada exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar actividad',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar actividad usando rutas estándar (para empresas)
+     */
+    public function eliminarActividadEmpresa($actividadId)
+    {
+        try {
+            $empresa = JWTAuth::user();
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $actividad = $empresa->actividades()->findOrFail($actividadId);
+
+            // Verificar si tiene reservas activas
+            $reservasActivas = $actividad->reservas()->where('Estado', 'confirmada')->count();
+            if ($reservasActivas > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la actividad porque tiene reservas confirmadas',
+                ], 422);
+            }
+
+            $actividad->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Actividad eliminada exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar actividad',
                 'error' => $e->getMessage(),
             ], 500);
         }

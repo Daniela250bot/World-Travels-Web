@@ -22,6 +22,7 @@ Route::get('/search', function () {
     return view('search');
 })->name('search');
 
+Route::get('/reportes', [App\Http\Controllers\ReportesController::class, 'index'])->name('reportes');
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
 // Login web (no API)

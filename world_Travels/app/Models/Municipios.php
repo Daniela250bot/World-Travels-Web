@@ -10,7 +10,6 @@ class Municipios extends Model
      protected $fillable = [
        'Nombre_Municipio',
        'idDepartamento',
- 
        ];
 
     public function departamento()

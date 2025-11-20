@@ -57,6 +57,38 @@
     </main>
 
     <script>
+        // Guardar el token JWT en localStorage después del login
+        @if(session('jwt_token'))
+            localStorage.setItem('token', '{{ session("jwt_token") }}');
+            localStorage.setItem('user_role', 'turista');
+        @endif
+
+        // Función auxiliar para hacer fetch con manejo automático de errores 401
+        function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                window.location.href = '{{ route("login") }}';
+                return Promise.reject(new Error('No token found'));
+            }
+
+            const headers = {
+                'Authorization': 'Bearer ' + token,
+                ...options.headers
+            };
+
+            return fetch(url, { ...options, headers })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                        localStorage.removeItem('token');
+                        window.location.href = '{{ route("login") }}';
+                        throw new Error('Unauthorized');
+                    }
+                    return response;
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {

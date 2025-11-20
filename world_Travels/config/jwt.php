@@ -295,7 +295,7 @@ return [
         */
 
         'user' => [
-            'provider' => 'users',
+            'provider' => 'users', // Mantener consistencia con el guard 'api'
         ],
 
         'administrador' => [

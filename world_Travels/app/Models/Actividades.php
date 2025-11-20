@@ -18,12 +18,13 @@ class Actividades extends Model
           'Imagen',
           'idCategoria',
           'idUsuario',
-          'idMunicipio'
+          'idMunicipio',
+          'empresa_id'
       ];
 
     public function categoria()
     {
-        return $this->belongsTo(Categorias_Actividades::class, 'idCategoria');
+        return $this->belongsTo(Category::class, 'idCategoria');
     }
 
     public function usuario()
@@ -44,5 +45,10 @@ class Actividades extends Model
     public function comentarios()
     {
         return $this->hasMany(Comentarios::class, 'idActividad');
+    }
+
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 }
