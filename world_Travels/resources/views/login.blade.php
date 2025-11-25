@@ -42,7 +42,7 @@
 <body class="bg-gray-100">
     <div class="min-h-screen flex items-center justify-center">
         <div class="bg-white p-6 rounded shadow max-w-md w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión - Empresa</h2>
             <form id="login-form" method="POST" action="{{ route('web.login') }}">
                 @csrf
                 <div class="mb-4">

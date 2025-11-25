@@ -20,6 +20,16 @@ class ActividadesController extends Controller
             $query->where('idCategoria', $request->categoria);
         }
 
+        // Filtrar por empresa si se proporciona
+        if ($request->has('empresa') && $request->empresa) {
+            $query->where('idUsuario', $request->empresa);
+        }
+
+        // Filtrar actividades de administradores (idUsuario NULL)
+        if ($request->has('admin') && $request->admin) {
+            $query->whereNull('idUsuario');
+        }
+
         $actividades = $query->get();
         return response()->json($actividades);
     }

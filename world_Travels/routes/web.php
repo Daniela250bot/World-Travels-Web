@@ -47,3 +47,8 @@ Route::post('/logout', function () {
     // Aquí podrías manejar logout si es necesario, pero como es API, quizás redirigir
     return redirect()->route('home');
 })->name('logout');
+
+// Ruta para dashboard de empresa
+Route::get('/dashboard-empresa', function () {
+    return view('dashboard-empresa');
+})->name('dashboard-empresa');

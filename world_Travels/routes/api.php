@@ -12,11 +12,13 @@ use App\Http\Controllers\ActividadesController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReservasController;
 use App\Http\Controllers\ComentariosController;
+use App\Http\Controllers\ComentariosReservasController;
 use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\TuristaController;
 use App\Http\Middleware\JwtMiddleware;
 
 // Route::get('/user', function (Request $request) {
@@ -43,7 +45,6 @@ use App\Http\Middleware\JwtMiddleware;
 
     // Rutas temporalmente públicas para testing
     Route::post('logout', [AuthController::class, 'logout']);
-    Route::get('me', [AuthController::class, 'me']);
 
     // Rutas temporalmente públicas para testing
     Route::get('listarReservas', [ReservasController::class, 'index']);
@@ -91,10 +92,18 @@ Route::get('actividades/{id}', [ActividadesController::class, 'show']);
 
 // Rutas para Reservas
 // Route::get('listarReservas', [ReservasController::class, 'index']);
-Route::post('crearReservas', [ReservasController::class, 'store']);
+Route::get('reservas/verificar-disponibilidad', [ReservasController::class, 'verificarDisponibilidad']);
 Route::get('reservas/{id}', [ReservasController::class, 'show']);
-Route::put('actualizarReservas/{id}', [ReservasController::class, 'update']);
 Route::delete('eliminarReservas/{id}', [ReservasController::class, 'destroy']);
+
+// Rutas para Comentarios de Reservas (Reseñas)
+Route::get('comentarios-reservas', [ComentariosReservasController::class, 'index']);
+Route::post('comentarios-reservas', [ComentariosReservasController::class, 'store']);
+Route::get('comentarios-reservas/{id}', [ComentariosReservasController::class, 'show']);
+Route::put('comentarios-reservas/{id}', [ComentariosReservasController::class, 'update']);
+Route::put('comentarios-reservas/{id}/aprobar', [ComentariosReservasController::class, 'aprobar']);
+Route::post('comentarios-reservas/{id}/foto', [ComentariosReservasController::class, 'subirFoto']);
+Route::delete('comentarios-reservas/{id}', [ComentariosReservasController::class, 'destroy']);
 
 // Rutas para Comentarios
 Route::get('listarComentarios', [ComentariosController::class, 'index']);
@@ -138,7 +147,7 @@ Route::get('reportes/export-excel', [ReportesController::class, 'exportExcel']);
 Route::delete('eliminarMunicipios/{id}', [MunicipiosController::class, 'destroy']);
 
 // Rutas protegidas para Empresas (sin restricciones adicionales)
-Route::group(['middleware' => [JwtMiddleware::class]], function () {
+Route::group(['middleware' => ['jwt.middleware']], function () {
     // Rutas para empresas gestionando sus propias actividades y reservas
     Route::get('empresas/me', [EmpresaController::class, 'me']);
     Route::post('empresas/logout', [EmpresaController::class, 'logout']);
@@ -162,7 +171,7 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
 });
 
 // Rutas protegidas para Administradores
-Route::group(['middleware' => [JwtMiddleware::class]], function () {
+Route::group(['middleware' => ['jwt.middleware']], function () {
     // CRUD Administradores con permisos específicos
     Route::get('administradores', [AdministradorController::class, 'index'])->middleware('check.permission:ver_administradores');
     Route::get('administradores/{id}', [AdministradorController::class, 'show'])->middleware('check.permission:ver_administradores');
@@ -188,3 +197,32 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::delete('eliminarActividades/{id}', [ActividadesController::class, 'destroy']);
 
 });
+
+// Rutas protegidas para Turistas (Usuarios)
+Route::group(['middleware' => ['jwt.middleware']], function () {
+    // Información del usuario autenticado
+    Route::get('me', [AuthController::class, 'me']);
+
+    // Reservas
+    Route::post('crearReservas', [ReservasController::class, 'store']);
+
+    // Perfil de usuario
+    Route::get('turista/perfil', [TuristaController::class, 'obtenerPerfil']);
+    Route::post('turista/perfil', [TuristaController::class, 'actualizarPerfil']);
+
+    // Reservas del usuario
+    Route::get('turista/reservas', [ReservasController::class, 'misReservas']);
+    Route::post('turista/reservas/{reservaId}/comentario', [TuristaController::class, 'agregarComentarioReserva']);
+    Route::put('turista/reservas/{id}', [ReservasController::class, 'update']);
+    Route::put('turista/reservas/{id}/cancelar', [ReservasController::class, 'cancelar']);
+
+    // Fotos de viajes
+    Route::post('turista/fotos', [TuristaController::class, 'subirFotoViaje']);
+    Route::post('turista/fotos/{fotoId}/like', [TuristaController::class, 'toggleLikeFoto']);
+
+    // Feed de actividades
+    Route::get('turista/feed', [TuristaController::class, 'obtenerFeedActividades']);
+});
+
+// Rutas públicas para fotos (feed público)
+Route::get('fotos/publicas', [TuristaController::class, 'obtenerFotosPublicas']);

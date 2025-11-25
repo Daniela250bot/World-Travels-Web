@@ -234,12 +234,19 @@ class AuthController extends Controller
         }
     }
 
-    public function me ()
+    public function me()
     {
         try {
             $user = JWTAuth::user();
 
-            // Obtener datos adicionales según el rol
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Obtener datos adicionales según el rol desde la relación userable
             $additionalData = [];
             if ($user->userable) {
                 $additionalData = $user->userable->toArray();
@@ -250,18 +257,11 @@ class AuthController extends Controller
                 'usuario' => array_merge($user->toArray(), $additionalData),
             ], 200);
         } catch (\Exception $e) {
-            // Si no hay token válido, devolver datos mock para testing
             return response()->json([
-                'success' => true,
-                'usuario' => [
-                    'id' => 1,
-                    'name' => 'Administrador',
-                    'email' => 'admin@worldtravels.com',
-                    'role' => 'Administrador',
-                    'Nombre' => 'Administrador',
-                    'Apellido' => 'Sistema'
-                ],
-            ], 200);
+                'success' => false,
+                'message' => 'Error al obtener datos del usuario',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 

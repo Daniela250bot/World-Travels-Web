@@ -17,15 +17,23 @@ class JwtMiddleware
      */
     public function handle(Request $request, Closure $next, string $roles = null): Response
     {
-        try{
-            // Autenticar usando JWT
-            $usuario = JWTAuth::parseToken()->authenticate();
+        $guard = $this->determineGuard($request);
+        $token = JWTAuth::getToken();
+
+        if (!$token) {
+            return response()->json(['error' => 'Token no proporcionado'], 401);
+        }
+
+        try {
+            $usuario = JWTAuth::authenticate($token, false, $guard);
 
             if (!$usuario) {
                 return response()->json(['error' => 'Token inválido o expirado'], 401);
             }
-        }catch(\Exception $e){
-            // si no hay token valido o esta vencido, devolvemos error
+
+            // Asegurar que el usuario esté disponible en el guard
+            Auth::guard($guard)->setUser($usuario);
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Token inválido o expirado'], 401);
         }
 
@@ -44,26 +52,23 @@ class JwtMiddleware
      * Determinar qué guard usar basado en la ruta
      */
     private function determineGuard(Request $request): string
-    {
-        $path = $request->path();
+{
+    $path = strtolower($request->path());
 
-        // Si la ruta contiene 'empresas', usar guard de empresas
-        if (str_contains($path, 'empresas/')) {
-            return 'api-empresas';
-        }
-
-        // Si la ruta contiene 'administradores', usar guard de administradores
-        if (str_contains($path, 'administradores/')) {
-            return 'api-administradores';
-        }
-
-        // Si la ruta contiene usuarios específicos, usar guard de usuarios
-        if (str_contains($path, 'usuarios/')) {
-            return 'api-usuarios';
-        }
-
-        // Por defecto, usar guard api
-        return 'api';
+    if (str_contains($path, 'empresas')) {
+        return 'api-empresas';
     }
+
+    if (str_contains($path, 'administradores')) {
+        return 'api-administradores';
+    }
+
+    if (str_contains($path, 'usuarios')) {
+        return 'api-usuarios';
+    }
+
+    return 'api';
+}
+
 
 }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class EmpresaController extends Controller
@@ -15,10 +16,19 @@ class EmpresaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $empresas = Empresa::all();
+            $query = Empresa::query();
+
+            // Filtrar por categoría si se proporciona
+            if ($request->has('categoria') && $request->categoria) {
+                $query->whereHas('actividades', function($q) use ($request) {
+                    $q->where('idCategoria', $request->categoria);
+                });
+            }
+
+            $empresas = $query->get();
             return response()->json([
                 'success' => true,
                 'data' => $empresas,
@@ -178,43 +188,58 @@ class EmpresaController extends Controller
     /**
      * Login para empresas
      */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'correo' => 'required|string|email',
-            'contraseña' => 'required|string|min:8',
+
+   
+public function login(Request $request)
+{
+    // Accept both 'contraseña' and 'password' for compatibility
+    $data = $request->all();
+    if (isset($data['password']) && !isset($data['contraseña'])) {
+        $data['contraseña'] = $data['password'];
+    }
+
+    $validator = Validator::make($data, [
+        'correo' => 'required|string|email',
+        'contraseña' => 'required|string|min:8',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    // Get credentials with the correct field names for authentication
+    $credentials = [
+        'correo' => $request->input('correo'),
+        'password' => $request->input('contraseña') ?: $request->input('password')
+    ];
+
+    try {
+        if (!$token = Auth::guard('api-empresas')->attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Credenciales inválidas',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'empresa' => Auth::guard('api-empresas')->user(), // 💡 aquí estaba el error
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $credentials = $request->only('correo', 'contraseña');
-
-        try {
-            if (!$token = JWTAuth::attempt($credentials, false, 'api-empresas')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Credenciales inválidas',
-                ], 401);
-            }
-
-            return response()->json([
-                'success' => true,
-                'token' => $token,
-                'empresa' => JWTAuth::user(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error en la autenticación',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error en la autenticación',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
+
 
     /**
      * Logout para empresas
@@ -242,7 +267,7 @@ class EmpresaController extends Controller
     public function me()
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
 
             if (!$empresa) {
                 return response()->json([
@@ -463,7 +488,7 @@ class EmpresaController extends Controller
     public function listarActividades()
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -539,7 +564,7 @@ class EmpresaController extends Controller
 
         try {
             // Obtener la empresa directamente del token JWT
-            $empresa = JWTAuth::user();
+            $empresa = Auth::user();
 
             if (!$empresa) {
                 return response()->json([
@@ -549,12 +574,12 @@ class EmpresaController extends Controller
             }
 
             // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
+            // if (!($empresa instanceof Empresa)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+            //     ], 403);
+            // }
 
             // Verificar que la empresa existe en la base de datos (doble verificación)
             $empresaVerificada = Empresa::find($empresa->id);
@@ -593,7 +618,7 @@ class EmpresaController extends Controller
     public function verActividad($actividadId)
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -650,7 +675,7 @@ class EmpresaController extends Controller
         }
 
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -690,7 +715,7 @@ class EmpresaController extends Controller
     public function eliminarActividad($actividadId)
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -738,7 +763,7 @@ class EmpresaController extends Controller
     public function listarReservas()
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -798,7 +823,7 @@ class EmpresaController extends Controller
     public function confirmarReserva($reservaId)
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -840,7 +865,7 @@ class EmpresaController extends Controller
     public function cancelarReserva($reservaId)
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -902,7 +927,7 @@ class EmpresaController extends Controller
         }
 
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
 
             if (!$empresa) {
                 return response()->json([
@@ -975,7 +1000,7 @@ class EmpresaController extends Controller
         }
 
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
@@ -1015,7 +1040,7 @@ class EmpresaController extends Controller
     public function eliminarActividadEmpresa($actividadId)
     {
         try {
-            $empresa = JWTAuth::user();
+            $empresa = Auth::guard('api-empresas')->user();
             if (!$empresa) {
                 return response()->json([
                     'success' => false,

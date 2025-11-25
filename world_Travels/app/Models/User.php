@@ -28,6 +28,9 @@ class User extends Authenticatable implements JWTSubject
         'verificado',
         'fcm_token',
         'foto_perfil',
+        'biografia',
+        'privacidad_perfil',
+        'ultima_actividad',
     ];
 
     protected $hidden = [
@@ -113,5 +116,38 @@ class User extends Authenticatable implements JWTSubject
         }
 
         return collect();
+    }
+
+    // Relaciones para funcionalidades de turista
+    public function comentariosReservas()
+    {
+        return $this->hasMany(ComentariosReserva::class, 'id_usuario');
+    }
+
+    public function fotosViajes()
+    {
+        return $this->hasMany(FotosViaje::class, 'id_usuario');
+    }
+
+    public function likesFotos()
+    {
+        return $this->hasMany(LikesFoto::class, 'id_usuario');
+    }
+
+    public function reservas()
+    {
+        return $this->hasMany(Reservas::class, 'id_usuario');
+    }
+
+    // Método para verificar si el perfil es público
+    public function esPerfilPublico()
+    {
+        return $this->privacidad_perfil === 'publico';
+    }
+
+    // Método para actualizar última actividad
+    public function actualizarUltimaActividad()
+    {
+        $this->update(['ultima_actividad' => now()]);
     }
 }

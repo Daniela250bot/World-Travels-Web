@@ -90,49 +90,20 @@
     </section>
 
     <!-- Categorías -->
-    <section class="py-20 bg-white">
+    <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
             <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Categorías de Actividades</h2>
-            <div id="categories-section" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            <div id="categories-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Categorías se cargarán aquí -->
             </div>
         </div>
     </section>
 
-    <!-- Destinos principales / actividades destacadas -->
+    <!-- Actividades Turísticas -->
     <section id="actividades" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Destinos Destacados</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Villa de Leyva" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-2xl font-bold mb-2 text-gray-800">Villa de Leyva</h3>
-                        <p class="text-gray-600 mb-4">Pueblo colonial con plazas empedradas, iglesias históricas y paisajes andinos que te transportarán al pasado.</p>
-                        <a href="{{ route('search') }}" class="text-blue-600 font-semibold hover:text-blue-800">Explorar →</a>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Sogamoso" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-2xl font-bold mb-2 text-gray-800">Sogamoso</h3>
-                        <p class="text-gray-600 mb-4">Ciudad termal con aguas medicinales y cercanía al Parque Nacional Pisba, ideal para el descanso y la aventura.</p>
-                        <a href="{{ route('search') }}" class="text-blue-600 font-semibold hover:text-blue-800">Explorar →</a>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                    <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Tunja" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-2xl font-bold mb-2 text-gray-800">Tunja</h3>
-                        <p class="text-gray-600 mb-4">Capital de Boyacá, con arquitectura colonial y el Museo Casa del Fundador, cuna de la independencia.</p>
-                        <a href="{{ route('search') }}" class="text-blue-600 font-semibold hover:text-blue-800">Explorar →</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Activities Section -->
             <div class="text-center mb-12">
-                <h3 class="text-3xl font-bold mb-8 text-gray-800">Actividades Turísticas</h3>
+                <h2 class="text-4xl font-bold mb-8 text-gray-800">Actividades Turísticas</h2>
                 <div id="actividades-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Actividades se cargarán aquí con JavaScript -->
                 </div>
@@ -397,27 +368,66 @@
         </div>
     </footer>
 
+    @php
+        $isAuthenticated = auth()->check();
+    @endphp
+
+    <!-- Modal de Reserva -->
+    <div id="reservation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4" id="modal-title">Reservar Actividad</h3>
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 mb-2"><strong>Detalles de la actividad:</strong></p>
+                    <div id="activity-details" class="text-sm text-blue-700 space-y-1">
+                        <!-- Los detalles se cargarán dinámicamente -->
+                    </div>
+                </div>
+                <form id="reservation-form">
+                    <input type="hidden" id="activity-id" name="idActividad">
+                    <input type="hidden" id="user-id" name="idUsuario">
+                    <input type="hidden" name="Estado" value="pendiente">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Número de Personas</label>
+                        <input type="number" id="numero-personas" name="Numero_Personas" min="1" max="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <p class="text-xs text-gray-500 mt-1">Máximo 10 personas por reserva</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" onclick="closeReservationModal()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancelar</button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Reservar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Función para toggle FAQ
+        // ==================== UTILIDADES ====================
+        function showLoading(element, message = 'Cargando...') {
+            element.innerHTML = `<p class="col-span-full text-center text-gray-500 text-lg">${message}</p>`;
+        }
+
+        function showError(element, message = 'Error al cargar') {
+            element.innerHTML = `<p class="col-span-full text-center text-red-500 text-lg">${message}</p>`;
+        }
+
+        // ==================== INTERFAZ DE USUARIO ====================
         function toggleFAQ(button) {
             const content = button.querySelector('.mt-4');
             const icon = button.querySelector('svg');
 
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                icon.classList.add('rotate-180');
-            } else {
-                content.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-            }
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
         }
 
-        // Función para cargar categorías
+        // ==================== CATEGORÍAS ====================
         function loadCategories() {
+            const categoriesSection = document.getElementById('categories-section');
+            showLoading(categoriesSection, 'Cargando categorías...');
+
             fetch('http://127.0.0.1:8000/api/categories/active')
                 .then(response => response.json())
                 .then(data => {
-                    const categoriesSection = document.getElementById('categories-section');
                     categoriesSection.innerHTML = '';
 
                     if (data.length === 0) {
@@ -426,64 +436,153 @@
                     }
 
                     data.forEach(category => {
-                        const categoryDiv = document.createElement('div');
-                        categoryDiv.className = 'text-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer';
-                        categoryDiv.onclick = () => filterByCategory(category.id);
-                        categoryDiv.innerHTML = `
-                            ${category.imagen ? `<img src="${category.imagen}" alt="${category.nombre}" class="w-12 h-12 mx-auto mb-2 object-cover rounded">` : '<div class="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded flex items-center justify-center"><span class="text-blue-600 text-sm">📁</span></div>'}
-                            <h3 class="text-sm font-semibold text-gray-800">${category.nombre}</h3>
-                        `;
+                        const categoryDiv = createCategoryCard(category);
                         categoriesSection.appendChild(categoryDiv);
                     });
                 })
                 .catch(error => {
                     console.error('Error cargando categorías:', error);
-                    document.getElementById('categories-section').innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar categorías</p>';
+                    showError(categoriesSection, 'Error al cargar categorías');
                 });
         }
 
-        // Función para filtrar actividades por categoría
+        function createCategoryCard(category) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer group';
+            div.onclick = () => filterByCategory(category.id);
+
+            div.innerHTML = `
+                <div class="relative h-48 overflow-hidden">
+                    ${category.imagen
+                        ? `<img src="${category.imagen}" alt="${category.nombre}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300">`
+                        : '<div class="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center"><span class="text-white text-4xl">📁</span></div>'
+                    }
+                    <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                        <span class="text-white font-semibold text-lg">Explorar</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800">${category.nombre}</h3>
+                    ${category.descripcion
+                        ? `<p class="text-gray-600 text-sm leading-relaxed">${category.descripcion}</p>`
+                        : '<p class="text-gray-500 text-sm italic">Descubre actividades únicas en esta categoría</p>'
+                    }
+                </div>
+            `;
+
+            return div;
+        }
+
+        // ==================== GESTIÓN DE ACTIVIDADES ====================
+
         function filterByCategory(categoryId) {
             const actividadesList = document.getElementById('actividades-list');
-            actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500 text-lg">Cargando actividades filtradas...</p>';
+            showLoading(actividadesList, 'Cargando actividades filtradas...');
 
             fetch(`http://127.0.0.1:8000/api/listarActividades?categoria=${categoryId}`)
                 .then(response => response.json())
                 .then(data => {
-                    actividadesList.innerHTML = '';
-
-                    if (data.length === 0) {
-                        actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay actividades en esta categoría</p>';
-                        return;
-                    }
-
-                    data.forEach(actividad => {
-                        const div = document.createElement('div');
-                        div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
-                        div.innerHTML = `
-                            <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" alt="${actividad.Nombre_Actividad}" class="w-full h-48 object-cover">
-                            <div class="p-6">
-                                <h3 class="text-2xl font-bold mb-2 text-gray-800">${actividad.Nombre_Actividad}</h3>
-                                <p class="text-gray-600 mb-4">${actividad.Descripcion}</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-2xl font-bold text-blue-600">$${actividad.Precio}</span>
-                                    <span class="text-sm text-gray-500">${actividad.Ubicacion}</span>
-                                </div>
-                                <button onclick="window.location.href='{{ route('search') }}'" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Ver Más</button>
-                            </div>
-                        `;
-                        actividadesList.appendChild(div);
-                    });
+                    renderActivities(data, actividadesList);
                 })
                 .catch(error => {
                     console.error('Error cargando actividades filtradas:', error);
-                    actividadesList.innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar actividades</p>';
+                    showError(actividadesList, 'Error al cargar actividades');
                 });
+        }
+
+        // ==================== ACTIVIDADES ====================
+        function renderActivities(data, container) {
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay actividades disponibles</p>';
+                return;
+            }
+
+            data.forEach(actividad => {
+                const card = createActivityCard(actividad);
+                container.appendChild(card);
+            });
+        }
+
+        function createActivityCard(actividad) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group';
+
+            div.innerHTML = `
+                <div class="relative overflow-hidden rounded-t-xl">
+                    <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}"
+                         alt="${actividad.Nombre_Actividad}"
+                         class="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-110"
+                         onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'">
+                    <div class="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+                        <span class="text-sm font-bold text-gray-800">$${actividad.Precio}</span>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4">
+                        <div class="bg-gradient-to-t from-black to-transparent rounded-lg p-4">
+                            <h3 class="text-xl font-bold text-white mb-1 line-clamp-2">${actividad.Nombre_Actividad}</h3>
+                            <div class="flex items-center text-white text-sm">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                ${actividad.Ubicacion}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 bg-white">
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">${actividad.Descripcion}</p>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <div>
+                                <div class="font-medium">${new Date(actividad.Fecha_Actividad).toLocaleDateString('es-ES')}</div>
+                                <div class="text-xs">${actividad.Hora_Actividad.substring(0, 5)}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            <div>
+                                <div class="font-medium">Máx. ${actividad.Cupo_Maximo}</div>
+                                <div class="text-xs">personas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="flex text-yellow-400 mr-2">
+                                ★★★★☆
+                            </div>
+                            <span class="text-sm text-gray-500">(4.2)</span>
+                        </div>
+                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">4-6 horas</span>
+                    </div>
+
+                    <button onclick="viewReviews(${actividad.id})" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        Ver Detalles & Reseñas
+                    </button>
+                </div>
+            `;
+
+            return div;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             loadCategories();
             const actividadesList = document.getElementById('actividades-list');
+
+            // Manejar envío del formulario de reserva
+            document.getElementById('reservation-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                makeReservation();
+            });
 
             // Mostrar mensaje de carga
             actividadesList.innerHTML = '<p class="col-span-full text-center text-gray-500 text-lg">Cargando actividades...</p>';
@@ -519,7 +618,7 @@
                             }
                         ];
 
-                        actividadesEjemplo.forEach(actividad => {
+                        actividadesEjemplo.forEach((actividad, index) => {
                             const div = document.createElement('div');
                             div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
                             div.innerHTML = `
@@ -531,7 +630,9 @@
                                         <span class="text-2xl font-bold text-blue-600">$${actividad.precio}</span>
                                         <span class="text-sm text-gray-500">${actividad.ubicacion}</span>
                                     </div>
-                                    <button onclick="window.location.href='{{ route('search') }}'" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Ver Más</button>
+                                    <div class="mt-4 space-y-2">
+                                        <button onclick="viewReviews(${index + 1})" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-300">Ver Reseñas</button>
+                                    </div>
                                 </div>
                             `;
                             actividadesList.appendChild(div);
@@ -542,17 +643,63 @@
                     // Mostrar actividades reales
                     data.forEach(actividad => {
                         const div = document.createElement('div');
-                        div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
+                        div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group';
                         div.innerHTML = `
-                            <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" alt="${actividad.Nombre_Actividad}" class="w-full h-48 object-cover">
-                            <div class="p-6">
-                                <h3 class="text-2xl font-bold mb-2 text-gray-800">${actividad.Nombre_Actividad}</h3>
-                                <p class="text-gray-600 mb-4">${actividad.Descripcion}</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-2xl font-bold text-blue-600">$${actividad.Precio}</span>
-                                    <span class="text-sm text-gray-500">${actividad.Ubicacion}</span>
+                            <div class="relative overflow-hidden rounded-t-xl">
+                                <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" alt="${actividad.Nombre_Actividad}" class="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'">
+                                <div class="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+                                    <span class="text-sm font-bold text-gray-800">$${actividad.Precio}</span>
                                 </div>
-                                <button onclick="window.location.href='{{ route('search') }}'" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Ver Más</button>
+                                <div class="absolute bottom-4 left-4 right-4">
+                                    <div class="bg-gradient-to-t from-black to-transparent rounded-lg p-4">
+                                        <h3 class="text-xl font-bold text-white mb-1 line-clamp-2">${actividad.Nombre_Actividad}</h3>
+                                        <div class="flex items-center text-white text-sm">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            ${actividad.Ubicacion}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6 bg-white">
+                                <p class="text-gray-600 text-sm mb-4 line-clamp-3">${actividad.Descripcion}</p>
+
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div class="flex items-center text-sm text-gray-600">
+                                        <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">${new Date(actividad.Fecha_Actividad).toLocaleDateString('es-ES')}</div>
+                                            <div class="text-xs">${actividad.Hora_Actividad.substring(0, 5)}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-sm text-gray-600">
+                                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Máx. ${actividad.Cupo_Maximo}</div>
+                                            <div class="text-xs">personas</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <div class="flex text-yellow-400 mr-2">
+                                            ★★★★☆
+                                        </div>
+                                        <span class="text-sm text-gray-500">(4.2)</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">4-6 horas</span>
+                                </div>
+
+                                <button onclick="viewReviews(${actividad.id})" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    Ver Detalles & Reseñas
+                                </button>
                             </div>
                         `;
                         actividadesList.appendChild(div);
@@ -589,7 +736,7 @@
 
                     setTimeout(() => {
                         actividadesList.innerHTML = '';
-                        actividadesEjemplo.forEach(actividad => {
+                        actividadesEjemplo.forEach((actividad, index) => {
                             const div = document.createElement('div');
                             div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
                             div.innerHTML = `
@@ -601,7 +748,14 @@
                                         <span class="text-2xl font-bold text-blue-600">$${actividad.precio}</span>
                                         <span class="text-sm text-gray-500">${actividad.ubicacion}</span>
                                     </div>
-                                    <button onclick="window.location.href='{{ route('search') }}'" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Ver Más</button>
+                                    <div class="mt-4 space-y-2">
+                                        @if($isAuthenticated)
+                                            <button onclick="openReservationModal(${index + 1}, '${actividad.nombre_actividad}')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Reservar Ahora</button>
+                                        @else
+                                            <button onclick="redirectToLogin()" class="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 transition duration-300">Inicia Sesión para Reservar</button>
+                                        @endif
+                                        <button onclick="viewReviews(${index + 1})" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-300">Ver Reseñas</button>
+                                    </div>
                                 </div>
                             `;
                             actividadesList.appendChild(div);
@@ -609,6 +763,181 @@
                     }, 1000);
                 });
         });
+
+        function openReservationModal(activityId, activityName) {
+            // Verificar si hay token de autenticación
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Obtener información del usuario y detalles de la actividad
+                Promise.all([
+                    fetch('http://127.0.0.1:8000/api/me', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Accept': 'application/json'
+                        }
+                    }),
+                    fetch(`http://127.0.0.1:8000/api/actividades/${activityId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                ])
+                .then(([userResponse, activityResponse]) => Promise.all([userResponse.json(), activityResponse.json()]))
+                .then(([userData, activityData]) => {
+                    if (userData.id && activityData.id) {
+                        document.getElementById('activity-id').value = activityId;
+                        document.getElementById('user-id').value = userData.id;
+                        document.getElementById('modal-title').textContent = `Reservar: ${activityName}`;
+
+                        // Mostrar detalles de la actividad
+                        const activityDetails = document.getElementById('activity-details');
+                        const fecha = new Date(activityData.Fecha_Actividad).toLocaleDateString('es-ES');
+                        const hora = activityData.Hora_Actividad.substring(0, 5);
+
+                        activityDetails.innerHTML = `
+                            <div><strong>📅 Fecha:</strong> ${fecha}</div>
+                            <div><strong>🕐 Hora:</strong> ${hora}</div>
+                            <div><strong>📍 Lugar:</strong> ${activityData.Ubicacion}</div>
+                            <div><strong>💰 Precio:</strong> $${activityData.Precio} por persona</div>
+                            <div><strong>👥 Cupo máximo:</strong> ${activityData.Cupo_Maximo} personas</div>
+                        `;
+
+                        document.getElementById('reservation-modal').classList.remove('hidden');
+                    } else {
+                        alert('Error al obtener información del usuario o actividad.');
+                        window.location.href = '{{ route("login") }}';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error obteniendo datos:', error);
+                    alert('Error de conexión. Inténtalo nuevamente.');
+                });
+            } else {
+                // Mostrar mensaje de notificación mejorado
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold">Inicio de sesión requerido</p>
+                            <p class="text-sm">Debes iniciar sesión para reservar actividades. Redirigiendo...</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Redirigir después de 3 segundos
+                setTimeout(() => {
+                    window.location.href = '{{ route("login") }}';
+                }, 3000);
+
+                // Remover notificación después de redirección
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3500);
+            }
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
+        }
+
+        function redirectToLogin() {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    <div>
+                        <p class="font-semibold">Redirigiendo al login</p>
+                        <p class="text-sm">Inicia sesión para acceder a todas las funcionalidades.</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                window.location.href = '{{ route("login") }}';
+            }, 2000);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 2500);
+        }
+
+        function viewReviews(activityId) {
+            // Mostrar reseñas de ejemplo por ahora
+            const reviewsText = `Reseñas para la actividad ${activityId}:\n\n` +
+                '⭐⭐⭐⭐⭐ María González: "Excelente experiencia, muy recomendado!"\n' +
+                '⭐⭐⭐⭐☆ Carlos Rodríguez: "Buen lugar, pero un poco caro"\n' +
+                '⭐⭐⭐⭐⭐ Ana López: "Volveré definitivamente"\n\n' +
+                'Funcionalidad completa próximamente con reseñas reales.';
+            alert(reviewsText);
+        }
+
+        function makeReservation() {
+            const form = document.getElementById('reservation-form');
+            const formData = new FormData(form);
+
+            // Convertir FormData a objeto - solo campos necesarios
+            const data = {
+                idUsuario: parseInt(formData.get('idUsuario')),
+                idActividad: parseInt(formData.get('idActividad')),
+                Numero_Personas: parseInt(formData.get('Numero_Personas')),
+                Estado: formData.get('Estado')
+            };
+
+            console.log('Enviando datos de reserva:', data);
+
+            fetch('http://127.0.0.1:8000/api/crearReservas', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Respuesta del servidor:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos de respuesta:', data);
+                if (data.id) {
+                    alert('¡Reserva creada exitosamente! Revisa tu email para la confirmación.');
+                    closeReservationModal();
+                    // Limpiar formulario
+                    document.getElementById('reservation-form').reset();
+                } else {
+                    // Mostrar errores de validación específicos
+                    if (data.errors) {
+                        let errorMessage = 'Errores de validación:\n';
+                        for (let field in data.errors) {
+                            errorMessage += `${field}: ${data.errors[field].join(', ')}\n`;
+                        }
+                        alert(errorMessage);
+                    } else {
+                        alert('Error: ' + (data.message || 'Error desconocido'));
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error creando reserva:', error);
+                alert('Error de conexión. Inténtalo nuevamente.');
+            });
+        }
     </script>
 </body>
 </html>

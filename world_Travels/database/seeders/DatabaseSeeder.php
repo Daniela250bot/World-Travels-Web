@@ -139,10 +139,10 @@ class DatabaseSeeder extends Seeder
             'Precio' => 15000,
             'Cupo_Maximo' => 20,
             'Ubicacion' => 'Tunja, Boyacá',
-            'Imagen' => 'https://via.placeholder.com/400x250?text=Museo+Casa+del+Fundador',
+            'Imagen' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
             'idCategoria' => $cultura->id,
             'idMunicipio' => $tunja->id,
-            'idUsuario' => $usuario->id
+            'idUsuario' => $empresaUser->id
         ]);
 
         \App\Models\Actividades::create([
@@ -153,10 +153,10 @@ class DatabaseSeeder extends Seeder
             'Precio' => 25000,
             'Cupo_Maximo' => 15,
             'Ubicacion' => 'Villa de Leyva, Boyacá',
-            'Imagen' => 'https://via.placeholder.com/400x250?text=Villa+de+Leyva',
+            'Imagen' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
             'idCategoria' => $cultura->id,
             'idMunicipio' => $villaDeLeyva->id,
-            'idUsuario' => $usuario->id
+            'idUsuario' => $empresaUser->id
         ]);
 
         \App\Models\Actividades::create([
@@ -167,10 +167,10 @@ class DatabaseSeeder extends Seeder
             'Precio' => 30000,
             'Cupo_Maximo' => 25,
             'Ubicacion' => 'Sogamoso, Boyacá',
-            'Imagen' => 'https://via.placeholder.com/400x250?text=Baños+Termales',
+            'Imagen' => 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
             'idCategoria' => $naturaleza->id,
             'idMunicipio' => $sogamoso->id,
-            'idUsuario' => $usuario->id
+            'idUsuario' => $empresaUser->id
         ]);
 
         \App\Models\Actividades::create([
@@ -181,10 +181,10 @@ class DatabaseSeeder extends Seeder
             'Precio' => 45000,
             'Cupo_Maximo' => 12,
             'Ubicacion' => 'Sogamoso, Boyacá',
-            'Imagen' => 'https://via.placeholder.com/400x250?text=Parque+Pisba',
+            'Imagen' => 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
             'idCategoria' => $aventura->id,
             'idMunicipio' => $sogamoso->id,
-            'idUsuario' => $usuario->id
+            'idUsuario' => $empresaUser->id
         ]);
     }
 }

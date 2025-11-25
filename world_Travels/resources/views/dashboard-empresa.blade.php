@@ -283,7 +283,7 @@
                             data.data.forEach(actividad => {
                                 html += `
                                     <div class="border rounded-lg p-4">
-                                        <img src="${actividad.imagen || 'https://via.placeholder.com/300x200?text=Actividad'}" alt="${actividad.nombre}" class="w-full h-32 object-cover rounded mb-2">
+                                        <img src="${actividad.imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'}" alt="${actividad.nombre}" class="w-full h-32 object-cover rounded mb-2" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'">
                                         <h4 class="font-semibold">${actividad.nombre}</h4>
                                         <p class="text-sm text-gray-600">${actividad.descripcion}</p>
                                         <p class="text-sm">Precio: $${actividad.precio}</p>
