@@ -196,6 +196,11 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
     Route::put('actualizarActividades/{id}', [ActividadesController::class, 'update']);
     Route::delete('eliminarActividades/{id}', [ActividadesController::class, 'destroy']);
 
+    // Moderación de publicaciones
+    Route::get('admin/publicaciones', [TuristaController::class, 'obtenerTodasPublicaciones']);
+    Route::delete('admin/publicaciones/{id}', [TuristaController::class, 'eliminarPublicacionModerador']);
+    Route::get('admin/publicaciones/estadisticas', [TuristaController::class, 'obtenerEstadisticasPublicaciones']);
+
 });
 
 // Rutas protegidas para Turistas (Usuarios)
@@ -209,6 +214,21 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
     // Perfil de usuario
     Route::get('turista/perfil', [TuristaController::class, 'obtenerPerfil']);
     Route::post('turista/perfil', [TuristaController::class, 'actualizarPerfil']);
+    Route::delete('turista/perfil', [TuristaController::class, 'eliminarPerfil']);
+    Route::get('turista/estadisticas', [TuristaController::class, 'obtenerEstadisticas']);
+    Route::post('turista/foto-perfil', [TuristaController::class, 'subirFotoPerfil']);
+    Route::delete('turista/foto-perfil', [TuristaController::class, 'eliminarFotoPerfil']);
+
+    // Rutas para publicaciones
+    Route::get('turista/publicaciones', [TuristaController::class, 'obtenerPublicaciones']);
+    Route::post('turista/publicaciones', [TuristaController::class, 'crearPublicacion']);
+    Route::delete('turista/publicaciones/{id}', [TuristaController::class, 'eliminarPublicacion']);
+    Route::post('turista/publicaciones/{id}/like', [TuristaController::class, 'darLikePublicacion']);
+
+    // Rutas para comentarios de publicaciones
+    Route::get('turista/publicaciones/{id}/comentarios', [TuristaController::class, 'obtenerComentariosPublicacion']);
+    Route::post('turista/publicaciones/{id}/comentarios', [TuristaController::class, 'crearComentarioPublicacion']);
+    Route::delete('turista/comentarios/{id}', [TuristaController::class, 'eliminarComentarioPublicacion']);
 
     // Reservas del usuario
     Route::get('turista/reservas', [ReservasController::class, 'misReservas']);
@@ -222,6 +242,9 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
 
     // Feed de actividades
     Route::get('turista/feed', [TuristaController::class, 'obtenerFeedActividades']);
+
+    // Feed público de publicaciones
+    Route::get('turista/publicaciones-publicas', [TuristaController::class, 'obtenerPublicacionesPublicas']);
 });
 
 // Rutas públicas para fotos (feed público)

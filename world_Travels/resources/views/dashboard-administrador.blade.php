@@ -63,6 +63,10 @@
                     <h4 class="text-xl font-semibold mb-2">Empresas</h4>
                     <p>Gestiona empresas y empleados</p>
                 </button>
+                <button onclick="managePublications()" class="bg-pink-600 text-white p-6 rounded-lg hover:bg-pink-700 transition text-center">
+                    <h4 class="text-xl font-semibold mb-2">Publicaciones</h4>
+                    <p>Modera contenido de usuarios</p>
+                </button>
                 
             </div>
         </div>
@@ -2294,6 +2298,293 @@
         });
 
         let currentEmpresaId = null;
+
+        // Funciones para gestión de publicaciones
+        function managePublications() {
+            loadPublicationsList();
+            document.getElementById('publicationsModal').classList.remove('hidden');
+        }
+
+        function closePublicationsModal() {
+            document.getElementById('publicationsModal').classList.add('hidden');
+            document.getElementById('publicationsContent').innerHTML = '';
+        }
+
+        function loadPublicationsList(page = 1) {
+            const content = document.getElementById('publicationsContent');
+            content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p class="mt-4">Cargando publicaciones...</p></div>';
+
+            fetch(`http://127.0.0.1:8000/api/admin/publicaciones?page=${page}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let html = '<div class="mb-4 flex justify-between items-center">';
+                    html += '<h3 class="text-xl font-semibold">Publicaciones de Usuarios</h3>';
+                    html += '<div class="flex space-x-2">';
+                    html += '<select id="privacyFilter" class="border border-gray-300 rounded px-3 py-1 text-sm">';
+                    html += '<option value="">Todas las publicaciones</option>';
+                    html += '<option value="publico">Públicas</option>';
+                    html += '<option value="privado">Privadas</option>';
+                    html += '</select>';
+                    html += '<button onclick="loadPublicationsStats()" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Ver Estadísticas</button>';
+                    html += '</div></div>';
+
+                    if (data.publicaciones.length === 0) {
+                        html += '<div class="text-center py-8 text-gray-500">No hay publicaciones para mostrar.</div>';
+                    } else {
+                        html += '<div class="overflow-x-auto">';
+                        html += '<table class="w-full table-auto border-collapse border border-gray-300">';
+                        html += '<thead><tr class="bg-gray-100">';
+                        html += '<th class="border border-gray-300 px-4 py-2">Usuario</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Contenido</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Privacidad</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Likes</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Comentarios</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Fecha</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Acciones</th>';
+                        html += '</tr></thead><tbody>';
+
+                        data.publicaciones.forEach(pub => {
+                            const privacyClass = pub.privacidad === 'publico' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                            html += `<tr class="hover:bg-gray-50">`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.usuario.name}<br><small class="text-gray-500">${pub.usuario.email}</small></td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2 max-w-xs truncate">${pub.descripcion || pub.titulo || 'Sin descripción'}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2"><span class="px-2 py-1 rounded-full text-xs ${privacyClass}">${pub.privacidad}</span></td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.likes_count}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.comentarios_count}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${new Date(pub.fecha_creacion).toLocaleDateString()}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">`;
+                            html += `<button onclick="viewPublication(${pub.id})" class="bg-blue-500 text-white px-2 py-1 rounded text-sm mr-2">Ver</button>`;
+                            html += `<button onclick="deletePublication(${pub.id})" class="bg-red-500 text-white px-2 py-1 rounded text-sm">Eliminar</button>`;
+                            html += `</td></tr>`;
+                        });
+
+                        html += '</tbody></table></div>';
+
+                        // Paginación
+                        if (data.pagination.last_page > 1) {
+                            html += '<div class="mt-4 flex justify-center space-x-2">';
+                            for (let i = 1; i <= data.pagination.last_page; i++) {
+                                const activeClass = i === data.pagination.current_page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                                html += `<button onclick="loadPublicationsList(${i})" class="px-3 py-1 rounded ${activeClass}">${i}</button>`;
+                            }
+                            html += '</div>';
+                        }
+                    }
+
+                    content.innerHTML = html;
+
+                    // Agregar event listener para el filtro
+                    document.getElementById('privacyFilter').addEventListener('change', function() {
+                        loadPublicationsList(1, this.value);
+                    });
+                } else {
+                    content.innerHTML = '<div class="text-center py-8 text-red-600">Error al cargar publicaciones.</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando publicaciones:', error);
+                content.innerHTML = '<div class="text-center py-8 text-red-600">Error al cargar publicaciones.</div>';
+            });
+        }
+
+        function loadPublicationsList(page = 1, privacy = '') {
+            const content = document.getElementById('publicationsContent');
+            content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p class="mt-4">Cargando publicaciones...</p></div>';
+
+            let url = `http://127.0.0.1:8000/api/admin/publicaciones?page=${page}`;
+            if (privacy) {
+                url += `&privacidad=${privacy}`;
+            }
+
+            fetch(url, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let html = '<div class="mb-4 flex justify-between items-center">';
+                    html += '<h3 class="text-xl font-semibold">Publicaciones de Usuarios</h3>';
+                    html += '<div class="flex space-x-2">';
+                    html += '<select id="privacyFilter" class="border border-gray-300 rounded px-3 py-1 text-sm">';
+                    html += '<option value="">Todas las publicaciones</option>';
+                    html += '<option value="publico" ' + (privacy === 'publico' ? 'selected' : '') + '>Públicas</option>';
+                    html += '<option value="privado" ' + (privacy === 'privado' ? 'selected' : '') + '>Privadas</option>';
+                    html += '</select>';
+                    html += '<button onclick="loadPublicationsStats()" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Ver Estadísticas</button>';
+                    html += '</div></div>';
+
+                    if (data.publicaciones.length === 0) {
+                        html += '<div class="text-center py-8 text-gray-500">No hay publicaciones para mostrar.</div>';
+                    } else {
+                        html += '<div class="overflow-x-auto">';
+                        html += '<table class="w-full table-auto border-collapse border border-gray-300">';
+                        html += '<thead><tr class="bg-gray-100">';
+                        html += '<th class="border border-gray-300 px-4 py-2">Usuario</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Contenido</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Privacidad</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Likes</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Comentarios</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Fecha</th>';
+                        html += '<th class="border border-gray-300 px-4 py-2">Acciones</th>';
+                        html += '</tr></thead><tbody>';
+
+                        data.publicaciones.forEach(pub => {
+                            const privacyClass = pub.privacidad === 'publico' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                            html += `<tr class="hover:bg-gray-50">`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.usuario.name}<br><small class="text-gray-500">${pub.usuario.email}</small></td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2 max-w-xs truncate">${pub.descripcion || pub.titulo || 'Sin descripción'}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2"><span class="px-2 py-1 rounded-full text-xs ${privacyClass}">${pub.privacidad}</span></td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.likes_count}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${pub.comentarios_count}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">${new Date(pub.fecha_creacion).toLocaleDateString()}</td>`;
+                            html += `<td class="border border-gray-300 px-4 py-2">`;
+                            html += `<button onclick="viewPublication(${pub.id})" class="bg-blue-500 text-white px-2 py-1 rounded text-sm mr-2">Ver</button>`;
+                            html += `<button onclick="deletePublication(${pub.id})" class="bg-red-500 text-white px-2 py-1 rounded text-sm">Eliminar</button>`;
+                            html += `</td></tr>`;
+                        });
+
+                        html += '</tbody></table></div>';
+
+                        // Paginación
+                        if (data.pagination.last_page > 1) {
+                            html += '<div class="mt-4 flex justify-center space-x-2">';
+                            for (let i = 1; i <= data.pagination.last_page; i++) {
+                                const activeClass = i === data.pagination.current_page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                                html += `<button onclick="loadPublicationsList(${i}, '${privacy}')" class="px-3 py-1 rounded ${activeClass}">${i}</button>`;
+                            }
+                            html += '</div>';
+                        }
+                    }
+
+                    content.innerHTML = html;
+
+                    // Agregar event listener para el filtro
+                    document.getElementById('privacyFilter').addEventListener('change', function() {
+                        loadPublicationsList(1, this.value);
+                    });
+                } else {
+                    content.innerHTML = '<div class="text-center py-8 text-red-600">Error al cargar publicaciones.</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando publicaciones:', error);
+                content.innerHTML = '<div class="text-center py-8 text-red-600">Error al cargar publicaciones.</div>';
+            });
+        }
+
+        function viewPublication(id) {
+            // Implementar vista detallada de publicación
+            alert('Vista detallada de publicación ' + id + ' (por implementar)');
+        }
+
+        function deletePublication(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            fetch(`http://127.0.0.1:8000/api/admin/publicaciones/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Publicación eliminada exitosamente');
+                    loadPublicationsList();
+                } else {
+                    alert('Error al eliminar publicación: ' + (result.message || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error eliminando publicación:', error);
+                alert('Error al eliminar la publicación');
+            });
+        }
+
+        function loadPublicationsStats() {
+            fetch('http://127.0.0.1:8000/api/admin/publicaciones/estadisticas', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const stats = data.estadisticas;
+                    let statsHtml = '<div class="bg-blue-50 p-6 rounded-lg">';
+                    statsHtml += '<h4 class="text-xl font-semibold text-blue-800 mb-4">Estadísticas de Publicaciones</h4>';
+                    statsHtml += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">';
+                    statsHtml += `<div class="text-center"><p class="text-2xl font-bold text-blue-600">${stats.total_publicaciones}</p><p class="text-sm text-gray-600">Total Publicaciones</p></div>`;
+                    statsHtml += `<div class="text-center"><p class="text-2xl font-bold text-green-600">${stats.publicaciones_publicas}</p><p class="text-sm text-gray-600">Públicas</p></div>`;
+                    statsHtml += `<div class="text-center"><p class="text-2xl font-bold text-yellow-600">${stats.publicaciones_privadas}</p><p class="text-sm text-gray-600">Privadas</p></div>`;
+                    statsHtml += `<div class="text-center"><p class="text-2xl font-bold text-purple-600">${stats.total_likes}</p><p class="text-sm text-gray-600">Total Likes</p></div>`;
+                    statsHtml += `<div class="text-center"><p class="text-2xl font-bold text-red-600">${stats.total_comentarios}</p><p class="text-sm text-gray-600">Total Comentarios</p></div>`;
+                    statsHtml += '</div></div>';
+
+                    // Crear modal temporal para mostrar estadísticas
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+                    modal.innerHTML = `
+                        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                            <div class="mt-3">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Estadísticas de Publicaciones</h3>
+                                    <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="space-y-4">${statsHtml}</div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } else {
+                    alert('Error al cargar estadísticas');
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando estadísticas:', error);
+                alert('Error al cargar estadísticas');
+            });
+        }
+
+        // Funciones de acción (placeholders)
+        function manageUsers() { loadUserList(); }
+        function manageActivities() { loadActivityList(); }
+        function manageCategories() { loadCategoriesList(); document.getElementById('categoriesModal').classList.remove('hidden'); }
+        function manageMunicipios() { loadMunicipioList(); }
+        function manageCompanies() { loadCompanyList(); }
+        function viewReports() { window.location.href = '{{ route("reportes") }}'; }
     </script>
+
+    <!-- Modal para gestión de publicaciones -->
+    <div id="publicationsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Moderación de Publicaciones</h3>
+                    <button onclick="closePublicationsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="publicationsContent">
+                    <!-- Las publicaciones se cargarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Turismo en Boyacá</title>
+    <title>Restablecer Contraseña - Turismo en Boyacá</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -42,23 +42,25 @@
 <body class="bg-gray-100">
     <div class="min-h-screen flex items-center justify-center">
         <div class="bg-white p-6 rounded shadow max-w-md w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión - Empresa</h2>
-            <form id="login-form" method="POST" action="{{ route('web.login') }}">
+            <h2 class="text-2xl font-bold text-center mb-6">Restablecer Contraseña</h2>
+            <form id="reset-form" method="POST" action="{{ route('password.update') }}">
                 @csrf
+                <input type="hidden" name="email" value="{{ old('email', request('email')) }}">
                 <div class="mb-4">
-                    <label for="email" class="block mb-2">Correo Electrónico</label>
-                    <input type="email" id="email" name="email" class="w-full px-3 py-2 border rounded-md" autocomplete="email" required>
+                    <label for="codigo" class="block mb-2">Código de Verificación</label>
+                    <input type="text" id="codigo" name="codigo" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
                 <div class="mb-4">
-                    <label for="password" class="block mb-2">Contraseña</label>
-                    <input type="password" id="password" name="password" class="w-full px-3 py-2 border rounded-md" autocomplete="current-password" required>
+                    <label for="password" class="block mb-2">Nueva Contraseña</label>
+                    <input type="password" id="password" name="password" class="w-full px-3 py-2 border rounded-md" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Iniciar Sesión</button>
+                <div class="mb-4">
+                    <label for="password_confirmation" class="block mb-2">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" class="w-full px-3 py-2 border rounded-md" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Restablecer Contraseña</button>
             </form>
-            <p class="text-center mt-4">
-                <a href="{{ route('password.request') }}" class="text-blue-600">¿Olvidaste tu contraseña?</a>
-            </p>
-            <p class="text-center mt-2">¿No tienes cuenta? <a href="{{ route('register') }}" class="text-blue-600">Regístrate</a></p>
+            <p class="text-center mt-4"><a href="{{ route('login') }}" class="text-blue-600">Volver al Inicio de Sesión</a></p>
 
             @if ($errors->any())
                 <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -67,6 +69,12 @@
                             <li>{{ $error }}</li>
                         @endforeach
                     </ul>
+                </div>
+            @endif
+
+            @if (session('status'))
+                <div class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                    {{ session('status') }}
                 </div>
             @endif
         </div>

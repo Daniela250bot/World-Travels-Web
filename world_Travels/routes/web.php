@@ -24,6 +24,9 @@ Route::get('/search', function () {
 
 Route::get('/reportes', [App\Http\Controllers\ReportesController::class, 'index'])->name('reportes');
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+Route::get('/perfil', function () {
+    return view('perfil');
+})->name('perfil');
 
 // Login web (no API)
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'webLogin'])->name('web.login');
@@ -52,3 +55,9 @@ Route::post('/logout', function () {
 Route::get('/dashboard-empresa', function () {
     return view('dashboard-empresa');
 })->name('dashboard-empresa');
+
+// Rutas para reset de contraseña
+Route::get('/forgot-password', [App\Http\Controllers\AuthController::class, 'showForgotForm'])->name('password.request');
+Route::post('/forgot-password', [App\Http\Controllers\AuthController::class, 'sendResetCodeWeb'])->name('password.email');
+Route::get('/reset-password', [App\Http\Controllers\AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [App\Http\Controllers\AuthController::class, 'resetPasswordWeb'])->name('password.update');

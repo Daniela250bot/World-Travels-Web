@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Mail\CodigoVerificacionMail;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -308,6 +310,172 @@ class AuthController extends Controller
         );
 
         return $codigo;
+    }
+
+    public function sendResetCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró un usuario con ese correo electrónico',
+            ], 404);
+        }
+
+        $codigo = $this->generarCodigoReset($request->email);
+
+        try {
+            Mail::to($request->email)->send(new ResetPasswordMail($codigo));
+            return response()->json([
+                'success' => true,
+                'message' => 'Código de restablecimiento enviado al correo electrónico',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar el código de restablecimiento',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+            'codigo' => 'required|string|size:6',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado',
+            ], 404);
+        }
+
+        // Verificar el código desde cache
+        $cachedCode = Cache::get('reset_code_' . $request->email);
+        if (!$cachedCode || $cachedCode !== $request->codigo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Código de restablecimiento incorrecto',
+            ], 422);
+        }
+
+        // Cambiar la contraseña
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Limpiar el código del cache
+        Cache::forget('reset_code_' . $request->email);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contraseña restablecida exitosamente',
+        ], 200);
+    }
+
+    private function generarCodigoReset($email)
+    {
+        // Generar un código de 6 caracteres alfanuméricos
+        $codigo = strtoupper(Str::random(6));
+
+        // Guardar el código en cache por 24 horas
+        Cache::put('reset_code_' . $email, $codigo, now()->addHours(24));
+
+        return $codigo;
+    }
+
+    public function showForgotForm()
+    {
+        return view('forgot-password');
+    }
+
+    public function sendResetCodeWeb(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'No se encontró un usuario con ese correo electrónico'])->withInput();
+        }
+
+        $codigo = $this->generarCodigoReset($request->email);
+
+        try {
+            Mail::to($request->email)->send(new ResetPasswordMail($codigo));
+            return redirect()->route('password.reset', ['email' => $request->email])->with('status', 'Código de restablecimiento enviado al correo electrónico');
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => 'Error al enviar el código de restablecimiento'])->withInput();
+        }
+    }
+
+    public function showResetForm(Request $request)
+    {
+        return view('reset-password', ['email' => $request->query('email')]);
+    }
+
+    public function resetPasswordWeb(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+            'codigo' => 'required|string|size:6',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['codigo' => 'Usuario no encontrado'])->withInput();
+        }
+
+        // Verificar el código desde cache
+        $cachedCode = Cache::get('reset_code_' . $request->email);
+        if (!$cachedCode || $cachedCode !== $request->codigo) {
+            return back()->withErrors(['codigo' => 'Código de restablecimiento incorrecto'])->withInput();
+        }
+
+        // Cambiar la contraseña
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Limpiar el código del cache
+        Cache::forget('reset_code_' . $request->email);
+
+        return redirect()->route('login')->with('status', 'Contraseña restablecida exitosamente. Ahora puedes iniciar sesión.');
     }
 
 

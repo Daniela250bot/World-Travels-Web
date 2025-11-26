@@ -45,41 +45,114 @@
     @endif
 </head>
 <body class="bg-gray-100">
-    <header class="bg-blue-600 text-white p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">WORLD TRAVELS en Boyacá</h1>
-            <nav class="flex items-center">
-                <a href="{{ route('home') }}" class="mr-4">Inicio</a>
-                <a href="{{ route('search') }}" class="mr-4">Buscar Actividades</a>
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
+            <nav class="flex items-center space-x-6">
+                <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
                 @auth
-                    <div id="reservations-counter" class="hidden bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold mr-4">
+                    <div id="reservations-counter" class="hidden bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
                         <span id="active-reservations-count">0</span> reservas activas
                     </div>
-                    <a href="{{ route('dashboard') }}" class="mr-4">Mi Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
+                    <button onclick="showSection('perfil')" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Mi Perfil</button>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="bg-transparent border-none cursor-pointer text-white hover:text-gray-300">Cerrar Sesión</button>
+                        <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="mr-4">Iniciar Sesión</a>
-                    <a href="{{ route('register') }}">Registrarse</a>
+                    <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 transition">Iniciar Sesión</a>
+                    <a href="{{ route('register') }}" class="text-gray-700 hover:text-blue-600 transition">Registrarse</a>
                 @endauth
             </nav>
         </div>
     </header>
 
-    <main class="container mx-auto p-4">
-        <section class="mb-8">
-            <h2 class="text-3xl font-bold text-center mb-4">Buscar Actividades</h2>
-            <form id="search-form" class="bg-white p-6 rounded shadow mb-6">
-                <div class="mb-4">
-                    <label for="query" class="block mb-2">Buscar por nombre o descripción</label>
-                    <input type="text" id="query" name="query" class="w-full px-3 py-2 border rounded-md">
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-blue-600 via-teal-500 to-green-500 text-white py-20 overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'); background-size: cover; background-position: center;"></div>
+        <div class="relative container mx-auto px-4 text-center">
+            <h1 class="text-5xl font-bold mb-4">Descubre Boyacá</h1>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">Explora las mejores experiencias turísticas y actividades en el corazón de Colombia</p>
+
+            <!-- Formulario de búsqueda mejorado -->
+            <div class="max-w-2xl mx-auto mb-8">
+                <form id="search-form" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" id="query" name="query"
+                                   placeholder="Buscar actividades, lugares, experiencias..."
+                                   class="w-full px-4 py-3 border-0 rounded-lg text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <button type="submit"
+                                class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
+                            🔍 Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Estadísticas rápidas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div class="text-3xl font-bold mb-1" id="stats-actividades">0</div>
+                    <div class="text-sm opacity-90">Actividades</div>
                 </div>
-                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Buscar</button>
-            </form>
-            <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div class="text-3xl font-bold mb-1" id="stats-empresas">0</div>
+                    <div class="text-sm opacity-90">Empresas</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div class="text-3xl font-bold mb-1" id="stats-destinos">0</div>
+                    <div class="text-sm opacity-90">Destinos</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div class="text-3xl font-bold mb-1" id="stats-resenas">0</div>
+                    <div class="text-sm opacity-90">Reseñas</div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 120" class="w-full h-12 fill-white">
+                <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 py-12 -mt-12 relative z-10">
+        <!-- Filtros y categorías -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h2 class="text-3xl font-bold text-gray-800">Actividades Disponibles</h2>
+                    <div class="flex flex-wrap gap-4">
+                        <select id="categoria-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                        <select id="ubicacion-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Todas las ubicaciones</option>
+                        </select>
+                        <button onclick="clearFilters()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300">
+                            Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Resultados se mostrarán aquí -->
+            </div>
+
+            <!-- Estado vacío -->
+            <div id="no-results" class="hidden text-center py-16">
+                <div class="text-gray-400 text-8xl mb-6">🔍</div>
+                <h3 class="text-2xl font-bold text-gray-600 mb-2">No se encontraron actividades</h3>
+                <p class="text-gray-500 mb-6">Intenta con otros términos de búsqueda o filtra por categoría</p>
+                <button onclick="clearFilters()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Ver todas las actividades
+                </button>
             </div>
         </section>
 
@@ -109,6 +182,9 @@
     @php
         $isAuthenticated = auth()->check();
     @endphp
+
+    <!-- Variable para JavaScript -->
+    <meta name="is-authenticated" content="{{ $isAuthenticated ? 'true' : 'false' }}">
 
     <!-- Modal de Reserva -->
     <div id="reservation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
@@ -140,11 +216,13 @@
     </div>
 
     <script>
-        window.isAuthenticated = @json($isAuthenticated);
+        window.isAuthenticated = document.querySelector('meta[name="is-authenticated"]').getAttribute('content') === 'true';
         const isAuthenticated = window.isAuthenticated;
 
         document.addEventListener('DOMContentLoaded', function() {
             loadAllActivities();
+            loadStats();
+            loadCategorias();
 
             // Cargar reservas y contador si el usuario está autenticado
             if (isAuthenticated) {
@@ -162,75 +240,213 @@
                 e.preventDefault();
                 makeReservation();
             });
+
+            // Event listeners para filtros
+            document.getElementById('categoria-filter').addEventListener('change', applyFilters);
+            document.getElementById('ubicacion-filter').addEventListener('change', applyFilters);
         });
 
         function loadAllActivities() {
             fetch('http://127.0.0.1:8000/api/listarActividades')
                 .then(response => response.json())
-                .then(data => displayActivities(data))
+                .then(data => {
+                    displayActivities(data);
+                    populateUbicacionFilter(data);
+                })
                 .catch(error => console.error('Error cargando actividades:', error));
         }
 
-        function searchActivities(query) {
+        function loadStats() {
+            // Cargar estadísticas para la sección hero
             fetch('http://127.0.0.1:8000/api/listarActividades')
                 .then(response => response.json())
                 .then(data => {
-                    const filtered = data.filter(activity =>
-                        activity.Nombre_Actividad.toLowerCase().includes(query.toLowerCase()) ||
-                        activity.Descripcion.toLowerCase().includes(query.toLowerCase()) ||
-                        activity.Ubicacion.toLowerCase().includes(query.toLowerCase())
-                    );
+                    const actividades = data.length;
+                    document.getElementById('stats-actividades').textContent = actividades;
+
+                    // Contar empresas únicas
+                    const empresas = [...new Set(data.map(a => a.empresa_id))].length;
+                    document.getElementById('stats-empresas').textContent = empresas;
+
+                    // Contar ubicaciones únicas
+                    const ubicaciones = [...new Set(data.map(a => a.Ubicacion))].length;
+                    document.getElementById('stats-destinos').textContent = ubicaciones;
+
+                    // Simular reseñas (esto podría venir de una API real)
+                    document.getElementById('stats-resenas').textContent = Math.floor(actividades * 2.5);
+                })
+                .catch(error => console.error('Error cargando estadísticas:', error));
+        }
+
+        function loadCategorias() {
+            fetch('http://127.0.0.1:8000/api/categories/active')
+                .then(response => response.json())
+                .then(data => {
+                    const categoriaFilter = document.getElementById('categoria-filter');
+                    categoriaFilter.innerHTML = '<option value="">Todas las categorías</option>';
+
+                    if (Array.isArray(data)) {
+                        data.forEach(categoria => {
+                            const option = document.createElement('option');
+                            option.value = categoria.id;
+                            option.textContent = categoria.nombre;
+                            categoriaFilter.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error cargando categorías:', error));
+        }
+
+        function populateUbicacionFilter(actividades) {
+            const ubicacionFilter = document.getElementById('ubicacion-filter');
+            const ubicaciones = [...new Set(actividades.map(a => a.Ubicacion))].sort();
+
+            ubicacionFilter.innerHTML = '<option value="">Todas las ubicaciones</option>';
+            ubicaciones.forEach(ubicacion => {
+                const option = document.createElement('option');
+                option.value = ubicacion;
+                option.textContent = ubicacion;
+                ubicacionFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const categoriaId = document.getElementById('categoria-filter').value;
+            const ubicacion = document.getElementById('ubicacion-filter').value;
+            const query = document.getElementById('query').value;
+
+            fetch('http://127.0.0.1:8000/api/listarActividades')
+                .then(response => response.json())
+                .then(data => {
+                    let filtered = data;
+
+                    // Filtrar por búsqueda
+                    if (query) {
+                        filtered = filtered.filter(activity =>
+                            activity.Nombre_Actividad.toLowerCase().includes(query.toLowerCase()) ||
+                            activity.Descripcion.toLowerCase().includes(query.toLowerCase()) ||
+                            activity.Ubicacion.toLowerCase().includes(query.toLowerCase())
+                        );
+                    }
+
+                    // Filtrar por categoría
+                    if (categoriaId) {
+                        filtered = filtered.filter(activity => activity.categoria_id == categoriaId);
+                    }
+
+                    // Filtrar por ubicación
+                    if (ubicacion) {
+                        filtered = filtered.filter(activity => activity.Ubicacion === ubicacion);
+                    }
+
                     displayActivities(filtered);
                 })
-                .catch(error => console.error('Error buscando actividades:', error));
+                .catch(error => console.error('Error aplicando filtros:', error));
+        }
+
+        function clearFilters() {
+            document.getElementById('query').value = '';
+            document.getElementById('categoria-filter').value = '';
+            document.getElementById('ubicacion-filter').value = '';
+            loadAllActivities();
+        }
+
+        function searchActivities(query) {
+            // Actualizar el campo de búsqueda y aplicar filtros
+            document.getElementById('query').value = query;
+            applyFilters();
         }
 
         function displayActivities(activities) {
             const results = document.getElementById('results');
+            const noResults = document.getElementById('no-results');
+
             results.innerHTML = '';
+
             if (activities.length === 0) {
-                results.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron actividades.</p>';
+                results.classList.add('hidden');
+                noResults.classList.remove('hidden');
                 return;
             }
+
+            results.classList.remove('hidden');
+            noResults.classList.add('hidden');
+
             activities.forEach(activity => {
                 const div = document.createElement('div');
-                div.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300';
+                div.className = 'bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 transform hover:-translate-y-2 group';
+
                 div.innerHTML = `
-                    <img src="${activity.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}" alt="${activity.Nombre_Actividad}" class="w-full h-48 object-cover" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'">
+                    <div class="relative overflow-hidden rounded-t-2xl">
+                        <img src="${activity.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}"
+                             alt="${activity.Nombre_Actividad}"
+                             class="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110"
+                             onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'">
+                        <div class="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+                            <span class="text-sm font-bold text-gray-800">$${activity.Precio}</span>
+                        </div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <div class="bg-gradient-to-t from-black to-transparent rounded-lg p-4">
+                                <h3 class="text-xl font-bold text-white mb-1 line-clamp-2">${activity.Nombre_Actividad}</h3>
+                                <div class="flex items-center text-white text-sm">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    ${activity.Ubicacion}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="p-6">
-                        <h3 class="text-2xl font-bold mb-2 text-gray-800">${activity.Nombre_Actividad}</h3>
-                        <p class="text-gray-600 mb-4">${activity.Descripcion}</p>
-                        <div class="space-y-2 mb-4">
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${activity.Descripcion}</p>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
                             <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
-                                ${new Date(activity.Fecha_Actividad).toLocaleDateString('es-ES')}
+                                <div>
+                                    <div class="font-medium">${new Date(activity.Fecha_Actividad).toLocaleDateString('es-ES')}</div>
+                                    <div class="text-xs">${activity.Hora_Actividad.substring(0, 5)}</div>
+                                </div>
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                                 </svg>
-                                ${activity.Hora_Actividad.substring(0, 5)}
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                ${activity.Ubicacion}
+                                <div>
+                                    <div class="font-medium">Máx. ${activity.Cupo_Maximo}</div>
+                                    <div class="text-xs">personas</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-2xl font-bold text-blue-600">$${activity.Precio}</span>
-                            <span class="text-sm text-gray-500">Máx. ${activity.Cupo_Maximo} personas</span>
+
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 mr-2">
+                                    ★★★★☆
+                                </div>
+                                <span class="text-sm text-gray-500">(4.2)</span>
+                            </div>
+                            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">4-6 horas</span>
                         </div>
-                        <div class="mt-4 space-y-2">
-                            <button onclick="openReservationModal(${activity.id}, '${activity.Nombre_Actividad}')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Reservar Ahora</button>
-                            <button onclick="viewReviews(${activity.id})" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-300">Ver Reseñas</button>
+
+                        <div class="flex space-x-3">
+                            <button onclick="openReservationModal(${activity.id}, '${activity.Nombre_Actividad}')"
+                                    class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
+                                Reservar Ahora
+                            </button>
+                            <button onclick="viewReviews(${activity.id})"
+                                    class="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 `;
+
                 results.appendChild(div);
             });
         }

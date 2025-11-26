@@ -63,12 +63,13 @@ class ReservasController extends Controller
             }
 
             // Verificar que la actividad esté disponible (no cancelada o completada)
-            if ($actividad->Estado === 'cancelada') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Esta actividad ha sido cancelada'
-                ], 400);
-            }
+            // Nota: La tabla actividades no tiene columna Estado, se asume que todas están activas
+            // if ($actividad->Estado === 'cancelada') {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Esta actividad ha sido cancelada'
+            //     ], 400);
+            // }
 
             // Verificar fecha y hora - no permitir reservas para actividades pasadas
             $fechaActividad = Carbon::parse($actividad->Fecha_Actividad . ' ' . $actividad->Hora_Actividad);
@@ -81,34 +82,44 @@ class ReservasController extends Controller
                 ], 400);
             }
 
-            // Verificar que el usuario existe
+            // Primero intentar encontrar el usuario en tabla users (por si es un ID de users)
             $user = \App\Models\User::find($request->idUsuario);
-            if (!$user) {
-                Log::error('Usuario no encontrado en tabla users', [
-                    'idUsuario' => $request->idUsuario,
-                    'request_data' => $request->all()
+
+            if ($user) {
+                // Es un ID de tabla users, buscar o crear perfil de turista
+                Log::info('ID recibido es de tabla users, buscando perfil de turista', [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'userable_type' => $user->userable_type,
+                    'userable_id' => $user->userable_id
                 ]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuario no encontrado'
-                ], 404);
-            }
 
-            Log::info('Usuario encontrado', [
-                'user_id' => $user->id,
-                'user_email' => $user->email,
-                'user_name' => $user->name
-            ]);
+                // Primero verificar si ya tiene un perfil vinculado
+                if ($user->userable_type === 'App\\Models\\Usuarios' && $user->userable_id) {
+                    $usuario = \App\Models\Usuarios::find($user->userable_id);
+                    if ($usuario) {
+                        Log::info('Usando perfil de turista ya vinculado', [
+                            'usuario_id' => $usuario->id,
+                            'user_id' => $request->idUsuario,
+                            'email' => $user->email
+                        ]);
+                    } else {
+                        Log::warning('Usuario claims to have userable_id but profile not found', [
+                            'user_id' => $request->idUsuario,
+                            'userable_id' => $user->userable_id
+                        ]);
+                        // Reset userable fields and continue with creation
+                        $user->update(['userable_type' => null, 'userable_id' => null]);
+                    }
+                }
 
-            // Verificar si el idUsuario enviado es ya un ID de perfil de turista
-            $usuario = \App\Models\Usuarios::find($request->idUsuario);
-
-            if (!$usuario) {
-                // Si no es un ID directo, buscar por user_id
-                $usuario = \App\Models\Usuarios::where('user_id', $request->idUsuario)->first();
-
+                // Si no tiene perfil vinculado, buscar por user_id
                 if (!$usuario) {
-                    // Verificar si ya existe un usuario con el mismo email
+                    $usuario = \App\Models\Usuarios::where('user_id', $request->idUsuario)->first();
+                }
+
+                // Si aún no tiene perfil, buscar por email y vincular
+                if (!$usuario) {
                     $usuarioExistente = \App\Models\Usuarios::where('Email', $user->email)->first();
                     if ($usuarioExistente) {
                         // Si existe, actualizar el user_id para vincularlo
@@ -119,27 +130,47 @@ class ReservasController extends Controller
                             'user_id' => $request->idUsuario,
                             'email' => $user->email
                         ]);
-                    } else {
-                        // Si no existe, crear uno nuevo
-                        $usuario = \App\Models\Usuarios::create([
-                            'user_id' => $request->idUsuario,
-                            'Nombre' => $user->name ?? 'Usuario',
-                            'Apellido' => '',
-                            'Email' => $user->email ?? '',
-                            'Contraseña' => Hash::make('temporal123'),
-                            'Telefono' => '',
-                            'Nacionalidad' => '',
-                            'Fecha_Registro' => now(),
-                            'Rol' => 'Turista',
-                            'codigo_verificacion' => null,
-                        ]);
-                        Log::info('Nuevo perfil de turista creado', [
-                            'usuario_id' => $usuario->id,
-                            'user_id' => $request->idUsuario,
-                            'email' => $user->email
-                        ]);
                     }
                 }
+
+                // Si definitivamente no tiene perfil, crear uno nuevo
+                if (!$usuario) {
+                    $usuario = \App\Models\Usuarios::create([
+                        'user_id' => $request->idUsuario,
+                        'Nombre' => $user->name ?? 'Usuario',
+                        'Apellido' => '',
+                        'Email' => $user->email ?? '',
+                        'Contraseña' => Hash::make('temporal123'),
+                        'Telefono' => '',
+                        'Nacionalidad' => '',
+                        'Fecha_Registro' => now(),
+                        'Rol' => 'Turista',
+                        'codigo_verificacion' => null,
+                    ]);
+                    Log::info('Nuevo perfil de turista creado', [
+                        'usuario_id' => $usuario->id,
+                        'user_id' => $request->idUsuario,
+                        'email' => $user->email
+                    ]);
+                }
+            } else {
+                // Intentar buscar directamente en tabla usuarios
+                $usuario = \App\Models\Usuarios::find($request->idUsuario);
+                if (!$usuario) {
+                    Log::error('Usuario no encontrado ni en tabla users ni en tabla usuarios', [
+                        'idUsuario' => $request->idUsuario,
+                        'request_data' => $request->all()
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Usuario no encontrado'
+                    ], 404);
+                }
+
+                Log::info('Usuario encontrado directamente en tabla usuarios', [
+                    'usuario_id' => $usuario->id,
+                    'usuario_email' => $usuario->Email
+                ]);
             }
 
             // Verificar que el usuario no tenga reservas activas para esta actividad
@@ -426,23 +457,58 @@ class ReservasController extends Controller
         try {
             $user = JWTAuth::parseToken()->authenticate();
             if (!$user) {
+                Log::warning('Usuario no autenticado en misReservas');
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no autenticado'
                 ], 401);
             }
 
+            Log::info('Usuario autenticado en misReservas', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'userable_type' => $user->userable_type,
+                'userable_id' => $user->userable_id
+            ]);
+
             // Encontrar el perfil de turista
             $usuario = \App\Models\Usuarios::where('user_id', $user->id)->first();
+
             if (!$usuario) {
-                return response()->json([
-                    'success' => true,
-                    'reservas' => [
-                        'pasadas' => [],
-                        'proximas' => []
-                    ]
+                Log::warning('Perfil de turista no encontrado para usuario', [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email
                 ]);
+
+                // Intentar buscar por email como fallback
+                $usuario = \App\Models\Usuarios::where('Email', $user->email)->first();
+                if ($usuario) {
+                    Log::info('Perfil encontrado por email, vinculando user_id', [
+                        'usuario_id' => $usuario->id,
+                        'user_id' => $user->id,
+                        'email' => $user->email
+                    ]);
+                    $usuario->update(['user_id' => $user->id]);
+                } else {
+                    Log::warning('No se encontró perfil de turista ni por user_id ni por email', [
+                        'user_id' => $user->id,
+                        'user_email' => $user->email
+                    ]);
+                    return response()->json([
+                        'success' => true,
+                        'reservas' => [
+                            'pasadas' => [],
+                            'proximas' => []
+                        ]
+                    ]);
+                }
             }
+
+            Log::info('Perfil de turista encontrado', [
+                'usuario_id' => $usuario->id,
+                'usuario_email' => $usuario->Email,
+                'user_id' => $usuario->user_id
+            ]);
 
             $reservas = Reservas::with(['actividad.categoria', 'usuario'])
                 ->where('idUsuario', $usuario->id)
@@ -450,17 +516,45 @@ class ReservasController extends Controller
                 ->orderBy('hora', 'desc')
                 ->get();
 
+            Log::info('Reservas encontradas para usuario', [
+                'usuario_id' => $usuario->id,
+                'total_reservas' => $reservas->count(),
+                'reservas_ids' => $reservas->pluck('id')->toArray()
+            ]);
+
             $now = Carbon::now();
+            Log::info('Fecha actual para comparación', ['now' => $now->toDateTimeString()]);
 
             $reservasPasadas = $reservas->filter(function ($reserva) use ($now) {
                 $fechaActividad = Carbon::parse($reserva->Fecha_Reserva . ' ' . ($reserva->hora ?? '00:00:00'));
-                return $fechaActividad->isPast();
+                $isPast = $fechaActividad->isPast();
+                Log::info('Evaluando reserva como pasada', [
+                    'reserva_id' => $reserva->id,
+                    'fecha_actividad' => $fechaActividad->toDateTimeString(),
+                    'is_past' => $isPast
+                ]);
+                return $isPast;
             });
 
             $reservasProximas = $reservas->filter(function ($reserva) use ($now) {
                 $fechaActividad = Carbon::parse($reserva->Fecha_Reserva . ' ' . ($reserva->hora ?? '00:00:00'));
-                return $fechaActividad->isFuture();
+                $isFuture = $fechaActividad->isFuture();
+                Log::info('Evaluando reserva como próxima', [
+                    'reserva_id' => $reserva->id,
+                    'fecha_actividad' => $fechaActividad->toDateTimeString(),
+                    'is_future' => $isFuture
+                ]);
+                return $isFuture;
             });
+
+            Log::info('Clasificación final de reservas', [
+                'usuario_id' => $usuario->id,
+                'total_reservas' => $reservas->count(),
+                'reservas_pasadas' => $reservasPasadas->count(),
+                'reservas_proximas' => $reservasProximas->count(),
+                'reservas_pasadas_ids' => $reservasPasadas->pluck('id')->toArray(),
+                'reservas_proximas_ids' => $reservasProximas->pluck('id')->toArray()
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -471,7 +565,9 @@ class ReservasController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error obteniendo reservas del usuario: ' . $e->getMessage());
+            Log::error('Error obteniendo reservas del usuario: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,

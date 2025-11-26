@@ -6,16 +6,32 @@
     <title>Dashboard Turista - WORLD TRAVELS</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Variable para JavaScript -->
+    <meta name="jwt-token" content="{{ session('jwt_token') }}">
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 </head>
 <body class="bg-gray-50">
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
             <nav class="space-x-6">
-                <a href="{{ route('home') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
+                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Ininicio</a>
+                <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Perfil</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
@@ -35,8 +51,8 @@
                 <button onclick="scrollToEmpresas()" class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 transform hover:scale-105">
                     Explorar Empresas
                 </button>
-                <button onclick="showSection('reservas')" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
-                    Mis Reservas
+                <button onclick="document.getElementById('reservas-proximas').scrollIntoView({ behavior: 'smooth' })" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
+                    Ver Mis Reservas
                 </button>
             </div>
         </div>
@@ -49,9 +65,174 @@
 
     <main class="container mx-auto px-4 py-12 -mt-12 relative z-10">
         <!-- Estadísticas rápidas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12" id="stats-section">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" id="stats-section">
             <!-- Estadísticas se cargarán aquí -->
         </div>
+
+        <!-- Mis Reservas -->
+        <section class="mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold text-gray-800">Mis Reservas</h2>
+                <button onclick="showSection('reservas')" class="text-blue-600 hover:text-blue-800 text-lg font-medium">
+                    Ver todas →
+                </button>
+            </div>
+
+            <!-- Reservas Próximas -->
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold text-blue-600 mb-6">Próximas</h3>
+                <div id="reservas-proximas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Reservas próximas se cargarán aquí -->
+                </div>
+                <div id="reservas-proximas-empty" class="hidden text-center py-12">
+                    <div class="text-gray-400 text-6xl mb-4">📅</div>
+                    <p class="text-gray-600 text-lg">No tienes reservas próximas</p>
+                    <p class="text-gray-500 mt-2">¡Explora nuestras actividades y reserva tu próxima aventura!</p>
+                </div>
+            </div>
+
+            <!-- Reservas Pasadas -->
+            <div>
+                <h3 class="text-2xl font-semibold text-green-600 mb-6">Asistidas</h3>
+                <div id="reservas-pasadas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Reservas pasadas se cargarán aquí -->
+                </div>
+                <div id="reservas-pasadas-empty" class="hidden text-center py-12">
+                    <div class="text-gray-400 text-6xl mb-4">✅</div>
+                    <p class="text-gray-600 text-lg">Aún no has asistido a ninguna actividad</p>
+                    <p class="text-gray-500 mt-2">¡Tu primera experiencia te espera!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mis Publicaciones -->
+        <section class="mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold text-gray-800">Mis Publicaciones</h2>
+                <button onclick="mostrarModalPublicacion()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
+                    ✏️ Nueva Publicación
+                </button>
+            </div>
+
+            <!-- Lista de Publicaciones -->
+            <div id="publicaciones-list" class="space-y-6">
+                <!-- Las publicaciones se cargarán aquí -->
+            </div>
+
+            <div id="publicaciones-empty" class="hidden text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">📝</div>
+                <p class="text-gray-600 text-lg">Aún no has creado ninguna publicación</p>
+                <p class="text-gray-500 mt-2">¡Comparte tus experiencias y momentos inolvidables!</p>
+                <button onclick="mostrarModalPublicacion()" class="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Crear Primera Publicación
+                </button>
+            </div>
+        </section>
+
+        <!-- Feed de Publicaciones Públicas -->
+        <section class="mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold text-gray-800">Publicaciones de la Comunidad</h2>
+                <button onclick="loadPublicacionesPublicas()" class="text-blue-600 hover:text-blue-800 text-lg font-medium">
+                    🔄 Actualizar
+                </button>
+            </div>
+
+            <div id="publicaciones-publicas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Publicaciones públicas se cargarán aquí -->
+            </div>
+
+            <div id="publicaciones-publicas-empty" class="hidden text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">🌍</div>
+                <p class="text-gray-600 text-lg">No hay publicaciones públicas disponibles</p>
+                <p class="text-gray-500 mt-2">¡Sé el primero en compartir tus experiencias!</p>
+            </div>
+        </section>
+
+        <!-- Mapa Interactivo -->
+        <section class="mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold text-gray-800">Mapa Interactivo</h2>
+                <button onclick="centrarMapa()" class="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
+                    📍 Centrar en Boyacá
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <p class="text-gray-600 mb-4">Explora las actividades disponibles en Boyacá. Haz clic en los marcadores para ver más detalles.</p>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="filtro-empresa" checked class="mr-2">
+                            <span class="text-sm">Empresas</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="filtro-admin" checked class="mr-2">
+                            <span class="text-sm">Viajes por el Boyacá</span>
+                        </label>
+                        <select id="categoria-mapa" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="mapa-container" class="h-96 w-full">
+                    <!-- Mapa se cargará aquí -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendario de Actividades -->
+        <section class="mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-4xl font-bold text-gray-800">Calendario de Actividades</h2>
+                <div class="flex gap-4">
+                    <button onclick="cambiarVistaCalendario('month')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
+                        Mes
+                    </button>
+                    <button onclick="cambiarVistaCalendario('week')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
+                        Semana
+                    </button>
+                    <button onclick="cambiarVistaCalendario('day')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
+                        Día
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex flex-wrap gap-6 mb-4">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-blue-500 rounded mr-2"></div>
+                            <span class="text-sm text-gray-600">Actividades Disponibles</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                            <span class="text-sm text-gray-600">Días Festivos</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-purple-500 rounded mr-2"></div>
+                            <span class="text-sm text-gray-600">Mis Reservas</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <select id="categoria-calendario" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="mostrar-festivos" checked class="mr-2">
+                            <span class="text-sm">Mostrar días festivos</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="mostrar-reservas" checked class="mr-2">
+                            <span class="text-sm">Mostrar mis reservas</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="calendario-container" class="p-4">
+                    <!-- Calendario se cargará aquí -->
+                </div>
+            </div>
+        </section>
 
         <!-- Empresas Activas -->
         <section id="empresas-section" class="mb-16">
@@ -84,6 +265,7 @@
                 <!-- Actividades de administradores se cargarán aquí -->
             </div>
         </section>
+
 
         <!-- Actividades de Empresa (oculto inicialmente) -->
         <section id="actividades-empresa-section" class="mb-16 hidden">
@@ -118,6 +300,196 @@
                 <!-- Reservas se cargarán aquí -->
             </div>
         </section>
+
+        <!-- Sección de Perfil (oculta por defecto) -->
+        <section id="perfil-section" class="mb-16 hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Mi Perfil</h2>
+                <button onclick="volverAInicio()" class="text-blue-600 hover:text-blue-800">Volver al inicio</button>
+            </div>
+
+            <!-- Perfil del Usuario - Vista Principal -->
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-2xl p-8 border border-blue-100">
+                    <!-- Header del Perfil -->
+                    <div class="text-center mb-8">
+                        <div id="foto-perfil-container-view" class="relative inline-block mb-6">
+                            <img id="foto-perfil-preview-view" src="" alt="Foto de perfil"
+                                  class="w-40 h-40 rounded-full object-cover border-8 border-white shadow-xl mx-auto">
+                            <div id="foto-perfil-placeholder-view" class="w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-6xl mx-auto shadow-xl">
+                                U
+                            </div>
+                        </div>
+                        <h3 id="perfil-nombre-completo" class="text-4xl font-bold text-gray-800 mb-2">Usuario</h3>
+                        <p class="text-lg text-gray-600">Turista - WORLD TRAVELS</p>
+                    </div>
+
+                    <!-- Información del Perfil en Modo Vista -->
+                    <div id="perfil-view-mode" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Información Personal</h4>
+                                </div>
+                                <div class="space-y-2 text-gray-700">
+                                    <p><span class="font-medium">Nombre:</span> <span id="view-nombre">Cargando...</span></p>
+                                    <p><span class="font-medium">Apellido:</span> <span id="view-apellido">Cargando...</span></p>
+                                    <p><span class="font-medium">Nacionalidad:</span> <span id="view-nacionalidad">Cargando...</span></p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Contacto</h4>
+                                </div>
+                                <div class="space-y-2 text-gray-700">
+                                    <p><span class="font-medium">Email:</span> <span id="view-email">Cargando...</span></p>
+                                    <p><span class="font-medium">Teléfono:</span> <span id="view-telefono">Cargando...</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">Biografía</h4>
+                            </div>
+                            <p id="view-biografia" class="text-gray-700 leading-relaxed">Cargando...</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">Privacidad</h4>
+                            </div>
+                            <p id="view-privacidad" class="text-gray-700">Cargando...</p>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200">
+                            <button onclick="entrarModoEdicion()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Editar Perfil
+                            </button>
+                            <button onclick="eliminarPerfil()" class="bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Eliminar Perfil
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modo Edición (oculto por defecto) -->
+                    <div id="perfil-edit-mode" class="hidden space-y-6">
+                        <div class="text-center mb-6">
+                            <h4 class="text-2xl font-bold text-gray-800">Editar Información</h4>
+                            <p class="text-gray-600">Actualiza tu información personal</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                                <input type="text" id="perfil-nombre" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
+                                <input type="text" id="perfil-apellido" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="perfil-email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                <input type="tel" id="perfil-telefono" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nacionalidad</label>
+                            <input type="text" id="perfil-nacionalidad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biografía</label>
+                            <textarea id="perfil-biografia" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Cuéntanos un poco sobre ti..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Privacidad del Perfil</label>
+                            <select id="perfil-privacidad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="publico">Público</option>
+                                <option value="privado">Privado</option>
+                            </select>
+                        </div>
+
+                        <!-- Gestión de Foto de Perfil -->
+                        <div class="border-t pt-6">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4">Foto de Perfil</h5>
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <div id="foto-perfil-container" class="relative">
+                                    <img id="foto-perfil-preview" src="" alt="Foto de perfil"
+                                          class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
+                                    <div id="foto-perfil-placeholder" class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xl">
+                                        U
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <input type="file" id="foto-perfil-input" accept="image/*" class="hidden">
+                                    <button onclick="document.getElementById('foto-perfil-input').click()"
+                                            class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition duration-300 font-medium">
+                                        Cambiar Foto
+                                    </button>
+                                    <button onclick="eliminarFotoPerfil()" id="btn-eliminar-foto" class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition duration-300 font-medium hidden">
+                                        Eliminar Foto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción en Modo Edición -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200">
+                            <button onclick="guardarPerfil()" class="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Guardar Cambios
+                            </button>
+                            <button onclick="cancelarEdicion()" class="bg-gray-500 text-white px-8 py-3 rounded-xl hover:bg-gray-600 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal de Reserva -->
@@ -150,11 +522,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                            <select id="estado-reserva" name="Estado"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="pendiente">Pendiente</option>
-                                <option value="confirmada">Confirmada</option>
-                            </select>
+                            <div class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-green-50 text-green-800 font-medium">
+                                Confirmada ✓
+                            </div>
+                            <input type="hidden" name="Estado" value="confirmada">
                         </div>
                     </div>
 
@@ -199,28 +570,107 @@
         </div>
     </div>
 
+    <!-- Modal de Nueva Publicación -->
+    <div id="publicacion-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Crear Nueva Publicación</h3>
+                    <button onclick="closePublicacionModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="publicacion-form" enctype="multipart/form-data">
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Imagen</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition duration-300">
+                            <div id="imagen-preview" class="mb-4">
+                                <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-4xl mx-auto mb-2">📷</div>
+                                <p class="text-gray-600">Haz clic para seleccionar una imagen</p>
+                            </div>
+                            <input type="file" id="publicacion-imagen" name="imagen" accept="image/*" class="hidden" required>
+                            <button type="button" onclick="document.getElementById('publicacion-imagen').click()"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                                Seleccionar Imagen
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="publicacion-titulo" class="block text-gray-700 text-sm font-bold mb-2">Título</label>
+                        <input type="text" id="publicacion-titulo" name="titulo" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500" placeholder="Título de tu publicación" required>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="publicacion-descripcion" class="block text-gray-700 text-sm font-bold mb-2">Descripción</label>
+                        <textarea id="publicacion-descripcion" name="descripcion" rows="4" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Cuéntanos sobre tu experiencia..." required></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Privacidad</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="privacidad" value="publico" checked class="mr-2">
+                                <span class="text-sm">Público</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="privacidad" value="privado" class="mr-2">
+                                <span class="text-sm">Privado</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <button type="button" onclick="closePublicacionModal()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline transition duration-300">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline transition duration-300 transform hover:scale-105">
+                            Publicar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== CONFIGURACIÓN INICIAL ====================
-        @if(session('jwt_token'))
-            localStorage.setItem('token', '{{ session("jwt_token") }}');
+        const jwtToken = document.querySelector('meta[name="jwt-token"]').getAttribute('content');
+        if (jwtToken) {
+            localStorage.setItem('token', jwtToken);
             localStorage.setItem('user_role', 'turista');
-        @endif
+        }
 
         let currentUser = null;
         let currentEmpresa = null;
 
-        // Función global para cargar reservas
-        window.loadReservations = function() {
+        // Función global para cargar reservas completas
+        function loadReservasCompletas() {
+            console.log('Cargando reservas completas...');
             const listSection = document.getElementById('reservas-list');
 
+            if (!listSection) {
+                console.error('Elemento reservas-list no encontrado');
+                return;
+            }
+
+            showLoading(listSection, 'Cargando tus reservas...');
+
             fetchWithAuth('http://127.0.0.1:8000/api/turista/reservas')
-            .then(response => response.json())
+            .then(response => {
+                console.log('Respuesta de reservas:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Datos de reservas recibidos:', data);
                 if (data.success) {
                     let html = '<h3 class="text-2xl font-bold mb-6 text-gray-800">Mis Reservas</h3>';
 
                     // Reservas próximas
-                    if (data.reservas.proximas.length > 0) {
+                    if (data.reservas.proximas && data.reservas.proximas.length > 0) {
                         html += '<h4 class="text-xl font-semibold mb-4 text-blue-600">Próximas</h4>';
                         html += '<div class="space-y-4 mb-8">';
                         data.reservas.proximas.forEach(reserva => {
@@ -230,7 +680,7 @@
                     }
 
                     // Reservas pasadas
-                    if (data.reservas.pasadas.length > 0) {
+                    if (data.reservas.pasadas && data.reservas.pasadas.length > 0) {
                         html += '<h4 class="text-xl font-semibold mb-4 text-green-600">Pasadas</h4>';
                         html += '<div class="space-y-4">';
                         data.reservas.pasadas.forEach(reserva => {
@@ -239,15 +689,22 @@
                         html += '</div>';
                     }
 
-                    if (data.reservas.pasadas.length === 0 && data.reservas.proximas.length === 0) {
-                        html += '<p class="text-gray-600">No tienes reservas.</p>';
+                    if ((!data.reservas.pasadas || data.reservas.pasadas.length === 0) &&
+                        (!data.reservas.proximas || data.reservas.proximas.length === 0)) {
+                        html += '<div class="text-center py-12"><div class="text-gray-400 text-6xl mb-4">📅</div><p class="text-gray-600 text-lg">No tienes reservas registradas</p><p class="text-gray-500 mt-2">¡Explora nuestras actividades y reserva tu próxima aventura!</p></div>';
                     }
 
                     listSection.innerHTML = html;
+                } else {
+                    console.error('Respuesta no exitosa:', data);
+                    showError(listSection, 'Error al cargar reservas');
                 }
             })
-            .catch(error => console.error('Error cargando reservas:', error));
-        };
+            .catch(error => {
+                console.error('Error cargando reservas:', error);
+                showError(listSection, 'Error al cargar tus reservas');
+            });
+        }
 
         // ==================== UTILIDADES ====================
         function showLoading(element, message = 'Cargando...') {
@@ -274,31 +731,6 @@
             return fetch(url, { ...options, headers })
                 .then(response => {
                     if (response.status === 401) {
-                        localStorage.removeItem('token');
-                        window.location.href = '{{ route("login") }}';
-                        throw new Error('Unauthorized');
-                    }
-                    return response;
-                });
-        }
-        function fetchWithAuth(url, options = {}) {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-                window.location.href = '{{ route("login") }}';
-                return Promise.reject(new Error('No token found'));
-            }
-
-            const headers = {
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json',
-                ...options.headers
-            };
-
-            return fetch(url, { ...options, headers })
-                .then(response => {
-                    if (response.status === 401) {
-                        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
                         localStorage.removeItem('token');
                         window.location.href = '{{ route("login") }}';
                         throw new Error('Unauthorized');
@@ -351,6 +783,9 @@
             console.log('Iniciando carga de datos...');
             loadUserData();
             loadStats();
+            loadReservasOverview(); // Cargar vista previa de reservas en pantalla principal
+            loadPublicaciones(); // Cargar publicaciones del usuario
+            loadPublicacionesPublicas(); // Cargar publicaciones públicas de otros usuarios
             loadEmpresas();
             loadViajes();
             loadCategorias();
@@ -381,6 +816,7 @@
                 } else {
                     console.warn('Elemento viajes-categoria-filter no encontrado');
                 }
+
             }, 1000); // Esperar 1 segundo para que se carguen los elementos
         });
 
@@ -446,9 +882,9 @@
                 return;
             }
 
-            // Usar la nueva API de turista para obtener reservas
-            console.log('Haciendo fetch a /api/turista/reservas...');
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/reservas')
+            // Usar la API de estadísticas del turista
+            console.log('Haciendo fetch a /api/turista/estadisticas...');
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/estadisticas')
             .then(response => {
                 console.log('Respuesta de stats:', response.status);
                 return response.json();
@@ -456,22 +892,20 @@
             .then(data => {
                 console.log('Datos de stats recibidos:', data);
                 if (data.success) {
-                    const totalReservas = data.reservas.pasadas.length + data.reservas.proximas.length;
-                    const reservasConfirmadas = [...data.reservas.pasadas, ...data.reservas.proximas]
-                        .filter(r => r.Estado === 'confirmada').length;
+                    const estadisticas = data.estadisticas;
 
                     statsSection.innerHTML = `
                         <div class="bg-blue-50 p-6 rounded-lg text-center">
-                            <h3 class="text-2xl font-bold text-blue-600">${totalReservas}</h3>
+                            <h3 class="text-2xl font-bold text-blue-600">${estadisticas.reservas_total || 0}</h3>
                             <p class="text-gray-600">Total Reservas</p>
                         </div>
                         <div class="bg-green-50 p-6 rounded-lg text-center">
-                            <h3 class="text-2xl font-bold text-green-600">${reservasConfirmadas}</h3>
+                            <h3 class="text-2xl font-bold text-green-600">${estadisticas.reservas_confirmadas || 0}</h3>
                             <p class="text-gray-600">Reservas Confirmadas</p>
                         </div>
-                        <div class="bg-yellow-50 p-6 rounded-lg text-center">
-                            <h3 class="text-2xl font-bold text-yellow-600">${totalReservas - reservasConfirmadas}</h3>
-                            <p class="text-gray-600">Reservas Pendientes</p>
+                        <div class="bg-purple-50 p-6 rounded-lg text-center">
+                            <h3 class="text-2xl font-bold text-purple-600">${estadisticas.reservas_proximas || 0}</h3>
+                            <p class="text-gray-600">Próximas</p>
                         </div>
                     `;
                     console.log('Estadísticas cargadas correctamente');
@@ -491,12 +925,120 @@
                         <h3 class="text-2xl font-bold text-green-600">0</h3>
                         <p class="text-gray-600">Reservas Confirmadas</p>
                     </div>
-                    <div class="bg-yellow-50 p-6 rounded-lg text-center">
-                        <h3 class="text-2xl font-bold text-yellow-600">0</h3>
-                        <p class="text-gray-600">Reservas Pendientes</p>
+                    <div class="bg-purple-50 p-6 rounded-lg text-center">
+                        <h3 class="text-2xl font-bold text-purple-600">0</h3>
+                        <p class="text-gray-600">Próximas</p>
                     </div>
                 `;
             });
+        }
+
+        function loadReservasOverview() {
+            console.log('Cargando vista previa de reservas...');
+
+            const proximasContainer = document.getElementById('reservas-proximas');
+            const pasadasContainer = document.getElementById('reservas-pasadas');
+            const proximasEmpty = document.getElementById('reservas-proximas-empty');
+            const pasadasEmpty = document.getElementById('reservas-pasadas-empty');
+
+            if (!proximasContainer || !pasadasContainer || !proximasEmpty || !pasadasEmpty) {
+                console.error('Elementos de reservas no encontrados');
+                return;
+            }
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/reservas')
+            .then(response => {
+                console.log('Respuesta de reservas overview:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos de reservas overview recibidos:', data);
+                if (data.success) {
+                    // Mostrar todas las reservas próximas
+                    const proximas = data.reservas.proximas || [];
+                    console.log('Reservas próximas:', proximas.length);
+                    if (proximas.length > 0) {
+                        proximasContainer.innerHTML = '';
+                        proximas.forEach(reserva => {
+                            proximasContainer.appendChild(createReservaCard(reserva, 'proxima'));
+                        });
+                        proximasEmpty.classList.add('hidden');
+                    } else {
+                        proximasEmpty.classList.remove('hidden');
+                    }
+
+                    // Mostrar todas las reservas pasadas
+                    const pasadas = data.reservas.pasadas || [];
+                    console.log('Reservas pasadas:', pasadas.length);
+                    if (pasadas.length > 0) {
+                        pasadasContainer.innerHTML = '';
+                        pasadas.forEach(reserva => {
+                            pasadasContainer.appendChild(createReservaCard(reserva, 'pasada'));
+                        });
+                        pasadasEmpty.classList.add('hidden');
+                    } else {
+                        pasadasEmpty.classList.remove('hidden');
+                    }
+                } else {
+                    console.error('Respuesta no exitosa:', data);
+                    proximasEmpty.classList.remove('hidden');
+                    pasadasEmpty.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando vista previa de reservas:', error);
+                showNotification('Error al cargar las reservas. Revisa la consola para más detalles.', 'error');
+                proximasEmpty.classList.remove('hidden');
+                pasadasEmpty.classList.remove('hidden');
+            });
+        }
+
+        function createReservaCard(reserva, tipo) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 cursor-pointer group';
+            div.onclick = () => showSection('reservas');
+
+            const estadoClass = reserva.Estado === 'confirmada' ? 'bg-green-100 text-green-800' :
+                              reserva.Estado === 'cancelada' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800';
+
+            const tipoClass = tipo === 'proxima' ? 'border-l-4 border-blue-500' : 'border-l-4 border-green-500';
+
+            div.innerHTML = `
+                <div class="relative overflow-hidden rounded-t-2xl">
+                    <img src="${reserva.actividad?.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}"
+                         alt="${reserva.actividad?.Nombre_Actividad || 'Actividad'}"
+                         class="w-full h-40 object-cover group-hover:scale-105 transition duration-300">
+                    <div class="absolute top-3 right-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${estadoClass}">${reserva.Estado}</span>
+                    </div>
+                </div>
+                <div class="${tipoClass} p-4">
+                    <h4 class="font-bold text-gray-800 mb-2 line-clamp-1">${reserva.actividad?.Nombre_Actividad || 'Actividad no disponible'}</h4>
+                    <div class="space-y-1 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            ${new Date(reserva.Fecha_Reserva).toLocaleDateString('es-ES')}
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            ${reserva.Numero_Personas} persona${reserva.Numero_Personas !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold text-blue-600">$${reserva.actividad ? reserva.actividad.Precio * reserva.Numero_Personas : 'N/A'}</span>
+                            <span class="text-sm text-gray-500 group-hover:text-blue-600 transition">Ver detalles →</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return div;
         }
 
         // ==================== EMPRESAS ====================
@@ -957,6 +1499,7 @@
                 });
         }
 
+
         // ==================== MODALES ====================
         function openReservaModal(actividadId, actividadName) {
             if (!currentUser) {
@@ -966,6 +1509,7 @@
 
             document.getElementById('modal-title').textContent = `Reservar: ${actividadName}`;
             document.getElementById('actividad-id').value = actividadId;
+            // Usar el ID del usuario de la tabla users (que será convertido automáticamente por el backend)
             document.getElementById('usuario-id').value = currentUser.id;
 
             // Cargar detalles de la actividad
@@ -989,6 +1533,15 @@
                     `;
 
                     document.getElementById('reserva-modal').classList.remove('hidden');
+
+                    // Agregar event listener al formulario inmediatamente
+                    const reservaForm = document.getElementById('reserva-form');
+                    if (reservaForm) {
+                        reservaForm.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            handleReservaSubmit(e);
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error('Error cargando detalles de actividad:', error);
@@ -1052,6 +1605,608 @@
             document.getElementById('reviews-modal').classList.add('hidden');
         }
 
+        // ==================== FUNCIONES PARA PUBLICACIONES ====================
+        function mostrarModalPublicacion() {
+            document.getElementById('publicacion-modal').classList.remove('hidden');
+        }
+
+        function closePublicacionModal() {
+            document.getElementById('publicacion-modal').classList.add('hidden');
+            // Limpiar formulario
+            document.getElementById('publicacion-form').reset();
+            document.getElementById('imagen-preview').innerHTML = `
+                <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-4xl mx-auto mb-2">📷</div>
+                <p class="text-gray-600">Haz clic para seleccionar una imagen</p>
+            `;
+        }
+
+        // Vista previa de imagen
+        document.addEventListener('DOMContentLoaded', function() {
+            const imagenInput = document.getElementById('publicacion-imagen');
+            if (imagenInput) {
+                imagenInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('imagen-preview').innerHTML = `
+                                <img src="${e.target.result}" class="w-32 h-32 object-cover rounded-lg mx-auto">
+                            `;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+
+        // Crear publicación
+        document.addEventListener('DOMContentLoaded', function() {
+            const publicacionForm = document.getElementById('publicacion-form');
+            if (publicacionForm) {
+                publicacionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    crearPublicacion();
+                });
+            }
+        });
+
+        function crearPublicacion() {
+            const formData = new FormData(document.getElementById('publicacion-form'));
+            const submitBtn = document.querySelector('#publicacion-form button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/publicaciones', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Publicación creada exitosamente', 'success');
+                    closePublicacionModal();
+                    loadPublicaciones(); // Recargar lista de publicaciones
+                } else {
+                    showNotification(data.message || 'Error al crear publicación', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error creando publicación:', error);
+                showNotification('Error al crear la publicación', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+
+        function loadPublicaciones() {
+            const container = document.getElementById('publicaciones-list');
+            const emptyState = document.getElementById('publicaciones-empty');
+
+            container.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div><p class="mt-2 text-gray-600">Cargando publicaciones...</p></div>';
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/publicaciones')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.publicaciones.length === 0) {
+                        container.innerHTML = '';
+                        emptyState.classList.remove('hidden');
+                        return;
+                    }
+
+                    emptyState.classList.add('hidden');
+                    container.innerHTML = '';
+
+                    data.publicaciones.forEach(publicacion => {
+                        const publicacionCard = createPublicacionCard(publicacion);
+                        container.appendChild(publicacionCard);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando publicaciones:', error);
+                container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar publicaciones</p></div>';
+            });
+        }
+
+        function createPublicacionCard(publicacion) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-2xl shadow-lg overflow-hidden';
+
+            const fecha = new Date(publicacion.fecha_creacion).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            div.innerHTML = `
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center">
+                            <img src="${publicacion.usuario.foto_perfil || '/default-avatar.png'}"
+                                 alt="${publicacion.usuario.name}"
+                                 class="w-10 h-10 rounded-full object-cover mr-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${publicacion.usuario.name}</h4>
+                                <p class="text-sm text-gray-500">${fecha}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${publicacion.privacidad === 'publico' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${publicacion.privacidad === 'publico' ? '🌍 Público' : '🔒 Privado'}
+                            </span>
+                        </div>
+                    </div>
+
+                    ${publicacion.imagen ? `
+                        <div class="mb-4 rounded-lg overflow-hidden">
+                            <img src="${publicacion.imagen}" alt="${publicacion.titulo}" class="w-full h-64 object-cover">
+                        </div>
+                    ` : ''}
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${publicacion.titulo}</h3>
+                    <p class="text-gray-600 mb-4 leading-relaxed">${publicacion.descripcion}</p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="darLikePublicacion(${publicacion.id})" class="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition duration-300">
+                                <svg class="w-5 h-5 ${publicacion.user_liked ? 'fill-current text-red-500' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span>${publicacion.likes_count || 0}</span>
+                            </button>
+                            <button onclick="mostrarComentariosPublicacion(${publicacion.id})" class="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition duration-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <span>${publicacion.comentarios_count || 0}</span>
+                            </button>
+                        </div>
+                        <button onclick="eliminarPublicacion(${publicacion.id})" class="text-red-500 hover:text-red-700 transition duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        function darLikePublicacion(publicacionId) {
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/like`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadPublicaciones(); // Recargar para actualizar likes
+                }
+            })
+            .catch(error => console.error('Error dando like:', error));
+        }
+
+        function eliminarPublicacion(publicacionId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+                return;
+            }
+
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Publicación eliminada', 'success');
+                    loadPublicaciones();
+                } else {
+                    showNotification('Error al eliminar publicación', 'error');
+                }
+            })
+            .catch(error => console.error('Error eliminando publicación:', error));
+        }
+
+        function loadPublicacionesPublicas() {
+            const container = document.getElementById('publicaciones-publicas');
+            const emptyState = document.getElementById('publicaciones-publicas-empty');
+
+            container.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div><p class="mt-2 text-gray-600">Cargando publicaciones...</p></div>';
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/publicaciones-publicas')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.publicaciones.length === 0) {
+                        container.innerHTML = '';
+                        emptyState.classList.remove('hidden');
+                        return;
+                    }
+
+                    emptyState.classList.add('hidden');
+                    container.innerHTML = '';
+
+                    data.publicaciones.forEach(publicacion => {
+                        const publicacionCard = createPublicacionPublicaCard(publicacion);
+                        container.appendChild(publicacionCard);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar publicaciones públicas</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando publicaciones públicas:', error);
+                container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar publicaciones públicas</p></div>';
+            });
+        }
+
+        function createPublicacionPublicaCard(publicacion) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300';
+
+            const fecha = new Date(publicacion.fecha_creacion).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            div.innerHTML = `
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center">
+                            <img src="${publicacion.usuario.foto_perfil || '/default-avatar.png'}"
+                                 alt="${publicacion.usuario.name}"
+                                 class="w-10 h-10 rounded-full object-cover mr-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${publicacion.usuario.name}</h4>
+                                <p class="text-sm text-gray-500">${fecha}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                🌍 Público
+                            </span>
+                        </div>
+                    </div>
+
+                    ${publicacion.imagen ? `
+                        <div class="mb-4 rounded-lg overflow-hidden">
+                            <img src="${publicacion.imagen}" alt="${publicacion.titulo}" class="w-full h-48 object-cover">
+                        </div>
+                    ` : ''}
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${publicacion.titulo}</h3>
+                    <p class="text-gray-600 mb-4 leading-relaxed">${publicacion.descripcion}</p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="darLikePublicacionPublica(${publicacion.id})" class="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition duration-300">
+                                <svg class="w-5 h-5 ${publicacion.user_liked ? 'fill-current text-red-500' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span>${publicacion.likes_count || 0}</span>
+                            </button>
+                            <button onclick="mostrarComentariosPublicacionPublica(${publicacion.id})" class="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition duration-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <span>${publicacion.comentarios_count || 0}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        function darLikePublicacionPublica(publicacionId) {
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/like`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadPublicacionesPublicas(); // Recargar para actualizar likes
+                }
+            })
+            .catch(error => console.error('Error dando like:', error));
+        }
+
+        function mostrarComentariosPublicacionPublica(publicacionId) {
+            // Abrir modal de comentarios para publicaciones públicas
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4';
+            modal.id = 'comentarios-publicos-modal';
+
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                    <div class="p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold text-gray-800">Comentarios</h3>
+                            <button onclick="closeComentariosPublicosModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="comentarios-publicos-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- Comentarios se cargarán aquí -->
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p class="mt-2 text-gray-600">Cargando comentarios...</p>
+                        </div>
+                    </div>
+
+                    <div class="p-6 border-t bg-gray-50">
+                        <form id="comentario-publico-form" class="flex space-x-3">
+                            <input type="hidden" id="publicacion-publica-id-comentario" value="${publicacionId}">
+                            <input type="text" id="nuevo-comentario-publico" placeholder="Escribe un comentario..."
+                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   maxlength="500" required>
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
+                                Comentar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.classList.remove('hidden');
+
+            // Cargar comentarios
+            cargarComentariosPublicos(publicacionId);
+
+            // Manejar envío del formulario
+            document.getElementById('comentario-publico-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                crearComentarioPublico(publicacionId);
+            });
+        }
+
+        function closeComentariosPublicosModal() {
+            const modal = document.getElementById('comentarios-publicos-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function cargarComentariosPublicos(publicacionId) {
+            const container = document.getElementById('comentarios-publicos-list');
+
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/comentarios`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.comentarios.length === 0) {
+                        container.innerHTML = '<div class="text-center py-8"><p class="text-gray-500">Aún no hay comentarios. ¡Sé el primero en comentar!</p></div>';
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    data.comentarios.forEach(comentario => {
+                        const comentarioElement = createComentarioElement(comentario);
+                        container.appendChild(comentarioElement);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar comentarios</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando comentarios:', error);
+                container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar comentarios</p></div>';
+            });
+        }
+
+        function crearComentarioPublico(publicacionId) {
+            const comentarioInput = document.getElementById('nuevo-comentario-publico');
+            const comentario = comentarioInput.value.trim();
+
+            if (!comentario) {
+                showNotification('Por favor escribe un comentario', 'warning');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#comentario-publico-form button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/comentarios`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ comentario: comentario })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Comentario agregado exitosamente', 'success');
+                    comentarioInput.value = '';
+                    cargarComentariosPublicos(publicacionId); // Recargar comentarios
+                    loadPublicacionesPublicas(); // Actualizar contador de comentarios
+                } else {
+                    showNotification(data.message || 'Error al agregar comentario', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error creando comentario:', error);
+                showNotification('Error al agregar comentario', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+
+        function mostrarComentariosPublicacion(publicacionId) {
+            // Abrir modal de comentarios
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4';
+            modal.id = 'comentarios-modal';
+
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                    <div class="p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold text-gray-800">Comentarios</h3>
+                            <button onclick="closeComentariosModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="comentarios-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- Comentarios se cargarán aquí -->
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p class="mt-2 text-gray-600">Cargando comentarios...</p>
+                        </div>
+                    </div>
+
+                    <div class="p-6 border-t bg-gray-50">
+                        <form id="comentario-form" class="flex space-x-3">
+                            <input type="hidden" id="publicacion-id-comentario" value="${publicacionId}">
+                            <input type="text" id="nuevo-comentario" placeholder="Escribe un comentario..."
+                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   maxlength="500" required>
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
+                                Comentar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.classList.remove('hidden');
+
+            // Cargar comentarios
+            cargarComentarios(publicacionId);
+
+            // Manejar envío del formulario
+            document.getElementById('comentario-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                crearComentario(publicacionId);
+            });
+        }
+
+        function closeComentariosModal() {
+            const modal = document.getElementById('comentarios-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function cargarComentarios(publicacionId) {
+            const container = document.getElementById('comentarios-list');
+
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/comentarios`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.comentarios.length === 0) {
+                        container.innerHTML = '<div class="text-center py-8"><p class="text-gray-500">Aún no hay comentarios. ¡Sé el primero en comentar!</p></div>';
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    data.comentarios.forEach(comentario => {
+                        const comentarioElement = createComentarioElement(comentario);
+                        container.appendChild(comentarioElement);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar comentarios</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando comentarios:', error);
+                container.innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar comentarios</p></div>';
+            });
+        }
+
+        function createComentarioElement(comentario) {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-50 rounded-lg p-4';
+
+            const fecha = new Date(comentario.fecha_creacion).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            div.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <img src="${comentario.usuario.foto_perfil || '/default-avatar.png'}"
+                         alt="${comentario.usuario.name}"
+                         class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-semibold text-gray-800 text-sm">${comentario.usuario.name}</h4>
+                            <span class="text-xs text-gray-500">${fecha}</span>
+                        </div>
+                        <p class="text-gray-700 mt-1 text-sm leading-relaxed">${comentario.comentario}</p>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        function crearComentario(publicacionId) {
+            const comentarioInput = document.getElementById('nuevo-comentario');
+            const comentario = comentarioInput.value.trim();
+
+            if (!comentario) {
+                showNotification('Por favor escribe un comentario', 'warning');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#comentario-form button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+
+            fetchWithAuth(`http://127.0.0.1:8000/api/turista/publicaciones/${publicacionId}/comentarios`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ comentario: comentario })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Comentario agregado exitosamente', 'success');
+                    comentarioInput.value = '';
+                    cargarComentarios(publicacionId); // Recargar comentarios
+                    loadPublicaciones(); // Actualizar contador de comentarios
+                } else {
+                    showNotification(data.message || 'Error al agregar comentario', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error creando comentario:', error);
+                showNotification('Error al agregar comentario', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+
         function openImageModal(imageSrc) {
             // Crear modal para imagen ampliada
             const modal = document.createElement('div');
@@ -1110,9 +2265,10 @@
                     e.target.reset();
                     // Recargar estadísticas y reservas
                     loadStats();
+                    loadReservasOverview(); // Recargar vista previa de reservas en pantalla principal
                     // Si estamos en la sección de reservas, actualizar la lista
                     if (!document.getElementById('reservas-section').classList.contains('hidden')) {
-                        window.loadReservations();
+                        loadReservasCompletas();
                     }
                 } else {
                     throw new Error(data.message || 'Error desconocido');
@@ -1275,10 +2431,12 @@
             const empresasSection = document.getElementById('empresas-section');
             const actividadesEmpresaSection = document.getElementById('actividades-empresa-section');
             const reservasSection = document.getElementById('reservas-section');
+            const perfilSection = document.getElementById('perfil-section');
 
             if (empresasSection) empresasSection.classList.add('hidden');
             if (actividadesEmpresaSection) actividadesEmpresaSection.classList.add('hidden');
             if (reservasSection) reservasSection.classList.add('hidden');
+            if (perfilSection) perfilSection.classList.add('hidden');
 
             // Mostrar la sección seleccionada
             const selectedSection = document.getElementById(section + '-section');
@@ -1297,96 +2455,252 @@
                     // Las actividades se cargan al hacer clic en una empresa
                     break;
                 case 'reservas':
-                    loadReservations();
+                    loadReservasCompletas(); // Carga todas las reservas en la sección dedicada
+                    break;
+                case 'perfil':
+                    loadPerfil();
                     break;
             }
         }
 
         function loadPerfil() {
-            const perfilContent = document.getElementById('perfil-content');
+            console.log('Cargando perfil del usuario...');
 
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil')
+            // Cargar información del perfil
+            fetchWithAuth('http://127.0.0.1:8000/api/me')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    const perfil = data.perfil;
-                    perfilContent.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h4 class="text-lg font-semibold mb-4">Información Personal</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Foto de Perfil</label>
-                                        <div class="mt-1 flex items-center">
-                                            ${perfil.foto_perfil ?
-                                                `<img src="${perfil.foto_perfil}" alt="Foto de perfil" class="w-20 h-20 rounded-full object-cover">` :
-                                                `<div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xl">${perfil.name ? perfil.name.charAt(0).toUpperCase() : 'U'}</div>`
-                                            }
-                                            <input type="file" id="foto-perfil-input" accept="image/*" class="ml-4">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Biografía</label>
-                                        <textarea id="biografia-input" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">${perfil.biografia || ''}</textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Privacidad del Perfil</label>
-                                        <select id="privacidad-input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                            <option value="publico" ${perfil.privacidad_perfil === 'publico' ? 'selected' : ''}>Público</option>
-                                            <option value="privado" ${perfil.privacidad_perfil === 'privado' ? 'selected' : ''}>Privado</option>
-                                        </select>
-                                    </div>
-                                    <button onclick="guardarPerfil()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                        Guardar Cambios
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-semibold mb-4">Estadísticas</h4>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-blue-50 p-4 rounded-lg text-center">
-                                        <div class="text-2xl font-bold text-blue-600">${perfil.total_fotos}</div>
-                                        <div class="text-sm text-gray-600">Fotos</div>
-                                    </div>
-                                    <div class="bg-green-50 p-4 rounded-lg text-center">
-                                        <div class="text-2xl font-bold text-green-600">${perfil.total_likes_recibidos}</div>
-                                        <div class="text-sm text-gray-600">Likes Recibidos</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                if (data.success && data.usuario) {
+                    const usuario = data.usuario;
+
+                    // Llenar modo vista
+                    document.getElementById('view-nombre').textContent = usuario.Nombre || 'No especificado';
+                    document.getElementById('view-apellido').textContent = usuario.Apellido || 'No especificado';
+                    document.getElementById('view-email').textContent = usuario.Email || 'No especificado';
+                    document.getElementById('view-telefono').textContent = usuario.Telefono || 'No especificado';
+                    document.getElementById('view-nacionalidad').textContent = usuario.Nacionalidad || 'No especificada';
+                    document.getElementById('view-biografia').textContent = usuario.biografia || 'Sin biografía';
+                    document.getElementById('view-privacidad').textContent = usuario.privacidad_perfil === 'publico' ? 'Perfil Público' : 'Perfil Privado';
+
+                    // Nombre completo en el header
+                    const nombreCompleto = `${usuario.Nombre || ''} ${usuario.Apellido || ''}`.trim() || 'Usuario';
+                    document.getElementById('perfil-nombre-completo').textContent = nombreCompleto;
+
+                    // Llenar modo edición
+                    document.getElementById('perfil-nombre').value = usuario.Nombre || '';
+                    document.getElementById('perfil-apellido').value = usuario.Apellido || '';
+                    document.getElementById('perfil-email').value = usuario.Email || '';
+                    document.getElementById('perfil-telefono').value = usuario.Telefono || '';
+                    document.getElementById('perfil-nacionalidad').value = usuario.Nacionalidad || '';
+                    document.getElementById('perfil-biografia').value = usuario.biografia || '';
+                    document.getElementById('perfil-privacidad').value = usuario.privacidad_perfil || 'publico';
+
+                    // Mostrar foto de perfil
+                    updateFotoPerfilPreview(usuario.foto_perfil, usuario.name || usuario.Nombre);
                 }
             })
-            .catch(error => console.error('Error cargando perfil:', error));
+            .catch(error => console.error('Error cargando información del perfil:', error));
+
+        }
+
+        function updateFotoPerfilPreview(fotoUrl, nombre) {
+            // Actualizar foto en modo edición
+            const container = document.getElementById('foto-perfil-container');
+            const preview = document.getElementById('foto-perfil-preview');
+            const placeholder = document.getElementById('foto-perfil-placeholder');
+            const btnEliminar = document.getElementById('btn-eliminar-foto');
+
+            // Actualizar foto en modo vista
+            const containerView = document.getElementById('foto-perfil-container-view');
+            const previewView = document.getElementById('foto-perfil-preview-view');
+            const placeholderView = document.getElementById('foto-perfil-placeholder-view');
+
+            const inicial = nombre ? nombre.charAt(0).toUpperCase() : 'U';
+
+            if (fotoUrl) {
+                const fotoSrc = fotoUrl.startsWith('http') ? fotoUrl : `/storage/${fotoUrl}`;
+
+                // Modo edición
+                if (preview) {
+                    preview.src = fotoSrc;
+                    preview.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (btnEliminar) btnEliminar.classList.remove('hidden');
+                }
+
+                // Modo vista
+                if (previewView) {
+                    previewView.src = fotoSrc;
+                    previewView.style.display = 'block';
+                    if (placeholderView) placeholderView.style.display = 'none';
+                }
+            } else {
+                // Modo edición
+                if (placeholder) {
+                    placeholder.textContent = inicial;
+                    placeholder.style.display = 'block';
+                }
+                if (preview) preview.style.display = 'none';
+                if (btnEliminar) btnEliminar.classList.add('hidden');
+
+                // Modo vista
+                if (placeholderView) {
+                    placeholderView.textContent = inicial;
+                    placeholderView.style.display = 'block';
+                }
+                if (previewView) previewView.style.display = 'none';
+            }
+        }
+
+
+
+        function entrarModoEdicion() {
+            document.getElementById('perfil-view-mode').classList.add('hidden');
+            document.getElementById('perfil-edit-mode').classList.remove('hidden');
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('perfil-edit-mode').classList.add('hidden');
+            document.getElementById('perfil-view-mode').classList.remove('hidden');
         }
 
         function guardarPerfil() {
-            const formData = new FormData();
-            const fotoInput = document.getElementById('foto-perfil-input');
-            const biografia = document.getElementById('biografia-input').value;
-            const privacidad = document.getElementById('privacidad-input').value;
+            const biografia = document.getElementById('perfil-biografia').value;
+            const privacidad = document.getElementById('perfil-privacidad').value;
+            const telefono = document.getElementById('perfil-telefono').value;
 
-            if (fotoInput.files[0]) {
-                formData.append('foto_perfil', fotoInput.files[0]);
-            }
-            formData.append('biografia', biografia);
-            formData.append('privacidad_perfil', privacidad);
+            const data = {
+                biografia: biografia,
+                privacidad_perfil: privacidad,
+                telefono: telefono
+            };
 
             fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Perfil actualizado exitosamente', 'success');
+                    // Recargar perfil para actualizar vista
+                    loadPerfil();
+                    // Volver al modo vista
+                    cancelarEdicion();
+                } else {
+                    showNotification(data.message || 'Error al actualizar perfil', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error guardando perfil:', error);
+                showNotification('Error al guardar los cambios', 'error');
+            });
+        }
+
+        function eliminarPerfil() {
+            if (!confirm('¿Estás completamente seguro de que quieres eliminar tu perfil?\n\nEsta acción no se puede deshacer y perderás:\n- Todas tus reservas\n- Todas tus publicaciones\n- Tu acceso a la plataforma\n\n¿Deseas continuar?')) {
+                return;
+            }
+
+            if (!confirm('Última confirmación: ¿Realmente quieres eliminar permanentemente tu perfil de WORLD TRAVELS?')) {
+                return;
+            }
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil', {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Perfil eliminado exitosamente. Serás redirigido al inicio.', 'success');
+                    // Limpiar token y redirigir
+                    setTimeout(() => {
+                        localStorage.removeItem('token');
+                        window.location.href = '{{ route("home") }}';
+                    }, 2000);
+                } else {
+                    showNotification(data.message || 'Error al eliminar perfil', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error eliminando perfil:', error);
+                showNotification('Error al eliminar el perfil', 'error');
+            });
+        }
+
+        // Manejar cambio de foto de perfil
+        document.addEventListener('DOMContentLoaded', function() {
+            const fotoInput = document.getElementById('foto-perfil-input');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        subirFotoPerfil(file);
+                    }
+                });
+            }
+        });
+
+        function subirFotoPerfil(file) {
+            const formData = new FormData();
+            formData.append('foto_perfil', file);
+
+            // Mostrar loading
+            const btnCambiar = document.querySelector('button[onclick*="foto-perfil-input"]');
+            const originalText = btnCambiar.textContent;
+            btnCambiar.disabled = true;
+            btnCambiar.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700 mx-auto"></div>';
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/foto-perfil', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Perfil actualizado exitosamente');
-                    loadPerfil(); // Recargar perfil
+                    showNotification('Foto de perfil actualizada exitosamente', 'success');
+                    // Recargar perfil para actualizar todas las vistas
+                    loadPerfil();
                 } else {
-                    alert('Error: ' + (data.message || 'Error desconocido'));
+                    showNotification(data.message || 'Error al subir foto', 'error');
                 }
             })
-            .catch(error => console.error('Error guardando perfil:', error));
+            .catch(error => {
+                console.error('Error subiendo foto:', error);
+                showNotification('Error al subir la foto de perfil', 'error');
+            })
+            .finally(() => {
+                // Restaurar botón
+                btnCambiar.disabled = false;
+                btnCambiar.textContent = originalText;
+            });
+        }
+
+        function eliminarFotoPerfil() {
+            if (!confirm('¿Estás seguro de que quieres eliminar tu foto de perfil?')) {
+                return;
+            }
+
+            fetchWithAuth('http://127.0.0.1:8000/api/turista/foto-perfil', {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Foto de perfil eliminada exitosamente', 'success');
+                    // Recargar perfil para actualizar todas las vistas
+                    loadPerfil();
+                } else {
+                    showNotification(data.message || 'Error al eliminar foto', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error eliminando foto:', error);
+                showNotification('Error al eliminar la foto de perfil', 'error');
+            });
         }
 
         function loadFotos() {
@@ -1633,7 +2947,7 @@
                         if (data.success) {
                             showNotification('Reserva actualizada exitosamente', 'success');
                             closeModal();
-                            window.loadReservations();
+                            loadReservasCompletas();
                             loadStats();
                         } else {
                             showNotification(data.message || 'Error al actualizar reserva', 'error');
@@ -1663,7 +2977,7 @@
             .then(data => {
                 if (data.success) {
                     showNotification('Reserva cancelada exitosamente', 'success');
-                    window.loadReservations();
+                    loadReservasCompletas();
                     loadStats();
                 } else {
                     showNotification(data.message || 'Error al cancelar reserva', 'error');
@@ -1807,7 +3121,7 @@
                     if (data.id) {
                         showNotification('Reseña agregada exitosamente', 'success');
                         closeModal();
-                        window.loadReservations();
+                        loadReservasCompletas();
                     } else {
                         showNotification('Error: ' + (data.message || 'Error desconocido'), 'error');
                     }
@@ -1815,6 +3129,306 @@
                 .catch(error => console.error('Error agregando reseña:', error));
             };
         }
+
+        // ==================== MAPA INTERACTIVO ====================
+        let mapa = null;
+        let marcadores = [];
+
+        function inicializarMapa() {
+            console.log('Inicializando mapa...');
+
+            const container = document.getElementById('mapa-container');
+            if (!container) {
+                console.error('Contenedor del mapa no encontrado');
+                return;
+            }
+
+            // Coordenadas aproximadas del centro de Boyacá, Colombia
+            const boyacaCenter = [5.5353, -73.3678];
+
+            // Inicializar mapa
+            mapa = L.map('mapa-container').setView(boyacaCenter, 9);
+
+            // Agregar capa de mapa base (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+            }).addTo(mapa);
+
+            // Cargar actividades en el mapa
+            cargarActividadesMapa();
+
+            // Agregar event listeners para filtros
+            document.getElementById('filtro-empresa').addEventListener('change', filtrarMarcadores);
+            document.getElementById('filtro-admin').addEventListener('change', filtrarMarcadores);
+            document.getElementById('categoria-mapa').addEventListener('change', filtrarMarcadores);
+        }
+
+        function centrarMapa() {
+            if (mapa) {
+                mapa.setView([5.5353, -73.3678], 9);
+            }
+        }
+
+        function cargarActividadesMapa() {
+            console.log('Cargando actividades para el mapa...');
+
+            // Cargar actividades de empresas
+            fetch('http://127.0.0.1:8000/api/listarActividades')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Actividades de empresas:', data);
+                    agregarMarcadores(data, 'empresa');
+                })
+                .catch(error => console.error('Error cargando actividades de empresas:', error));
+
+            // Cargar actividades administrativas
+            fetch('http://127.0.0.1:8000/api/listarActividades?admin=1')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Actividades administrativas:', data);
+                    agregarMarcadores(data, 'admin');
+                })
+                .catch(error => console.error('Error cargando actividades administrativas:', error));
+        }
+
+        function agregarMarcadores(actividades, tipo) {
+            actividades.forEach(actividad => {
+                // Usar coordenadas aproximadas si no están disponibles
+                // Aquí podrías agregar lógica para geocodificar direcciones
+                let lat = 5.5353 + (Math.random() - 0.5) * 2; // Coordenadas aleatorias cerca de Boyacá
+                let lng = -73.3678 + (Math.random() - 0.5) * 2;
+
+                const marker = L.marker([lat, lng], {
+                    tipo: tipo,
+                    categoria: actividad.categoria?.nombre || 'Sin categoría'
+                });
+
+                const popupContent = `
+                    <div class="max-w-xs">
+                        <h3 class="font-bold text-lg mb-2">${actividad.Nombre_Actividad}</h3>
+                        <img src="${actividad.Imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'}"
+                             alt="${actividad.Nombre_Actividad}" class="w-full h-24 object-cover rounded mb-2">
+                        <p class="text-sm text-gray-600 mb-2">${actividad.Descripcion}</p>
+                        <div class="text-sm mb-2">
+                            <strong>Fecha:</strong> ${new Date(actividad.Fecha_Actividad).toLocaleDateString('es-ES')}<br>
+                            <strong>Hora:</strong> ${actividad.Hora_Actividad}<br>
+                            <strong>Precio:</strong> $${actividad.Precio}<br>
+                            <strong>Cupo:</strong> ${actividad.Cupo_Maximo} personas
+                        </div>
+                        <button onclick="openReservaModal(${actividad.id}, '${actividad.Nombre_Actividad}')"
+                                class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
+                            Reservar
+                        </button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                marcadores.push(marker);
+            });
+
+            // Aplicar filtros iniciales
+            filtrarMarcadores();
+        }
+
+        function filtrarMarcadores() {
+            const filtroEmpresa = document.getElementById('filtro-empresa').checked;
+            const filtroAdmin = document.getElementById('filtro-admin').checked;
+            const categoriaSeleccionada = document.getElementById('categoria-mapa').value;
+
+            marcadores.forEach(marker => {
+                const mostrarTipo = (marker.options.tipo === 'empresa' && filtroEmpresa) ||
+                                   (marker.options.tipo === 'admin' && filtroAdmin);
+                const mostrarCategoria = !categoriaSeleccionada || marker.options.categoria === categoriaSeleccionada;
+
+                if (mostrarTipo && mostrarCategoria) {
+                    if (!mapa.hasLayer(marker)) {
+                        marker.addTo(mapa);
+                    }
+                } else {
+                    if (mapa.hasLayer(marker)) {
+                        mapa.removeLayer(marker);
+                    }
+                }
+            });
+        }
+
+        // ==================== CALENDARIO ====================
+        let calendario = null;
+
+        function inicializarCalendario() {
+            console.log('Inicializando calendario...');
+
+            const container = document.getElementById('calendario-container');
+            if (!container) {
+                console.error('Contenedor del calendario no encontrado');
+                return;
+            }
+
+            const calendarEl = document.createElement('div');
+            calendarEl.id = 'calendario';
+            container.appendChild(calendarEl);
+
+            calendario = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    cargarEventosCalendario(fetchInfo, successCallback, failureCallback);
+                },
+                eventClick: function(info) {
+                    mostrarDetallesEvento(info.event);
+                },
+                height: 'auto',
+                dayMaxEvents: 3,
+                moreLinkClick: 'popover'
+            });
+
+            calendario.render();
+
+            // Agregar event listeners para filtros
+            document.getElementById('categoria-calendario').addEventListener('change', () => calendario.refetchEvents());
+            document.getElementById('mostrar-festivos').addEventListener('change', () => calendario.refetchEvents());
+            document.getElementById('mostrar-reservas').addEventListener('change', () => calendario.refetchEvents());
+        }
+
+        function cambiarVistaCalendario(vista) {
+            if (calendario) {
+                let vistaFullCalendar = 'dayGridMonth';
+                switch(vista) {
+                    case 'month': vistaFullCalendar = 'dayGridMonth'; break;
+                    case 'week': vistaFullCalendar = 'timeGridWeek'; break;
+                    case 'day': vistaFullCalendar = 'timeGridDay'; break;
+                }
+                calendario.changeView(vistaFullCalendar);
+            }
+        }
+
+        function cargarEventosCalendario(fetchInfo, successCallback, failureCallback) {
+            const eventos = [];
+
+            // Cargar días festivos
+            if (document.getElementById('mostrar-festivos').checked) {
+                // Aquí cargarías días festivos desde la API
+                // Por ahora, algunos días festivos de Colombia
+                const diasFestivos = [
+                    { fecha: '2025-01-01', nombre: 'Año Nuevo' },
+                    { fecha: '2025-01-06', nombre: 'Día de Reyes' },
+                    { fecha: '2025-03-24', nombre: 'Día de San José' },
+                    { fecha: '2025-04-13', nombre: 'Domingo de Ramos' },
+                    { fecha: '2025-04-18', nombre: 'Viernes Santo' },
+                    { fecha: '2025-05-01', nombre: 'Día del Trabajo' },
+                    { fecha: '2025-05-29', nombre: 'Ascensión del Señor' },
+                    { fecha: '2025-06-08', nombre: 'Corpus Christi' },
+                    { fecha: '2025-06-23', nombre: 'Sagrado Corazón' },
+                    { fecha: '2025-07-20', nombre: 'Día de la Independencia' },
+                    { fecha: '2025-08-07', nombre: 'Batalla de Boyacá' },
+                    { fecha: '2025-08-18', nombre: 'Asunción de la Virgen' },
+                    { fecha: '2025-10-13', nombre: 'Día de la Raza' },
+                    { fecha: '2025-11-03', nombre: 'Todos los Santos' },
+                    { fecha: '2025-11-17', nombre: 'Independencia de Cartagena' },
+                    { fecha: '2025-12-08', nombre: 'Día de la Inmaculada Concepción' },
+                    { fecha: '2025-12-25', nombre: 'Navidad' }
+                ];
+
+                diasFestivos.forEach(festivo => {
+                    eventos.push({
+                        title: festivo.nombre,
+                        start: festivo.fecha,
+                        backgroundColor: '#10B981',
+                        borderColor: '#10B981',
+                        textColor: '#FFFFFF',
+                        tipo: 'festivo'
+                    });
+                });
+            }
+
+            // Cargar actividades
+            const categoriaSeleccionada = document.getElementById('categoria-calendario').value;
+
+            fetch(`http://127.0.0.1:8000/api/listarActividades${categoriaSeleccionada ? `?categoria=${categoriaSeleccionada}` : ''}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(actividad => {
+                        eventos.push({
+                            title: actividad.Nombre_Actividad,
+                            start: actividad.Fecha_Actividad,
+                            backgroundColor: '#3B82F6',
+                            borderColor: '#3B82F6',
+                            textColor: '#FFFFFF',
+                            tipo: 'actividad',
+                            extendedProps: {
+                                actividad: actividad
+                            }
+                        });
+                    });
+
+                    // Cargar reservas del usuario
+                    if (document.getElementById('mostrar-reservas').checked) {
+                        fetchWithAuth('http://127.0.0.1:8000/api/turista/reservas')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const todasReservas = [...(data.reservas.proximas || []), ...(data.reservas.pasadas || [])];
+                                    todasReservas.forEach(reserva => {
+                                        eventos.push({
+                                            title: `Mi reserva: ${reserva.actividad?.Nombre_Actividad || 'Actividad'}`,
+                                            start: reserva.Fecha_Reserva,
+                                            backgroundColor: '#8B5CF6',
+                                            borderColor: '#8B5CF6',
+                                            textColor: '#FFFFFF',
+                                            tipo: 'reserva',
+                                            extendedProps: {
+                                                reserva: reserva
+                                            }
+                                        });
+                                    });
+                                }
+                                successCallback(eventos);
+                            })
+                            .catch(error => {
+                                console.error('Error cargando reservas:', error);
+                                successCallback(eventos);
+                            });
+                    } else {
+                        successCallback(eventos);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cargando actividades:', error);
+                    failureCallback(error);
+                });
+        }
+
+        function mostrarDetallesEvento(evento) {
+            const tipo = evento.extendedProps?.tipo || evento.tipo;
+
+            if (tipo === 'actividad' && evento.extendedProps?.actividad) {
+                const actividad = evento.extendedProps.actividad;
+                openReservaModal(actividad.id, actividad.Nombre_Actividad);
+            } else if (tipo === 'reserva' && evento.extendedProps?.reserva) {
+                const reserva = evento.extendedProps.reserva;
+                verDetallesReserva(reserva.id);
+            } else if (tipo === 'festivo') {
+                // Mostrar información del día festivo
+                alert(`${evento.title}\n\nDía festivo en Colombia`);
+            }
+        }
+
+        // ==================== INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... código existente ...
+
+            // Inicializar mapa y calendario después de cargar categorías
+            setTimeout(() => {
+                inicializarMapa();
+                inicializarCalendario();
+            }, 1500);
+        });
     </script>
 </body>
 </html>
