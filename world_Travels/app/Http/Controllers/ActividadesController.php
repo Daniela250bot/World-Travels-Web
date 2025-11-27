@@ -13,7 +13,7 @@ class ActividadesController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Actividades::with('categoria');
+        $query = Actividades::with('categoria', 'municipio');
 
         // Filtrar por categoría si se proporciona
         if ($request->has('categoria') && $request->categoria) {

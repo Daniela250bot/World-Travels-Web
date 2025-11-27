@@ -249,14 +249,160 @@ class AdministradorController extends Controller
     public function me()
     {
         try {
+            $admin = JWTAuth::user();
+            $user = $admin->user; // Relación con User
+
+            $adminData = $admin->toArray();
+            $adminData['foto_perfil'] = $user ? $user->foto_perfil : null;
+
             return response()->json([
                 'success' => true,
-                'administrador' => JWTAuth::user(),
+                'administrador' => $adminData,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener información del administrador',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar perfil del administrador autenticado
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $admin = JWTAuth::user();
+            $user = $admin->user;
+
+            $validator = Validator::make($request->all(), [
+                'nombre' => 'required|string|max:255',
+                'correo_electronico' => 'required|string|email|max:255|unique:administradores,correo_electronico,' . $admin->id,
+                'telefono' => 'nullable|string|max:20',
+                'contraseña' => 'nullable|string|min:8|confirmed',
+                'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $data = $request->only(['nombre', 'correo_electronico', 'telefono']);
+
+            if ($request->has('contraseña') && !empty($request->contraseña)) {
+                $data['contraseña'] = Hash::make($request->contraseña);
+            }
+
+            $admin->update($data);
+
+            // Manejar subida de foto de perfil
+            if ($request->hasFile('foto_perfil')) {
+                // Eliminar foto anterior si existe
+                if ($user && $user->foto_perfil) {
+                    $oldPath = storage_path('app/public/' . $user->foto_perfil);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+
+                // Subir nueva foto
+                $file = $request->file('foto_perfil');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('fotos_perfil', $filename, 'public');
+
+                if ($user) {
+                    $user->update(['foto_perfil' => $path]);
+                }
+            }
+
+            // Recargar admin con foto actualizada
+            $adminData = $admin->fresh();
+            $adminData['foto_perfil'] = $user ? $user->foto_perfil : null;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil actualizado exitosamente',
+                'administrador' => $adminData,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar perfil',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar foto de perfil del administrador autenticado
+     */
+    public function deletePhoto()
+    {
+        try {
+            $admin = JWTAuth::user();
+            $user = $admin->user;
+
+            if ($user && $user->foto_perfil) {
+                // Eliminar archivo físico
+                $filePath = storage_path('app/public/' . $user->foto_perfil);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+
+                // Eliminar referencia en base de datos
+                $user->update(['foto_perfil' => null]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto de perfil eliminada exitosamente',
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay foto de perfil para eliminar',
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar foto de perfil',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar cuenta del administrador autenticado
+     */
+    public function deleteProfile()
+    {
+        try {
+            $admin = JWTAuth::user();
+
+            // Verificar que no sea el único administrador
+            $totalAdmins = Administrador::count();
+            if ($totalAdmins <= 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la cuenta. Debe haber al menos un administrador en el sistema.',
+                ], 422);
+            }
+
+            $admin->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cuenta eliminada exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar cuenta',
                 'error' => $e->getMessage(),
             ], 500);
         }

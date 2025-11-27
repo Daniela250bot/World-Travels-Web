@@ -10,6 +10,10 @@ class Municipios extends Model
      protected $fillable = [
        'Nombre_Municipio',
        'idDepartamento',
+       'descripcion',
+       'estado',
+       'latitud',
+       'longitud',
        ];
 
     public function departamento()
@@ -20,5 +24,16 @@ class Municipios extends Model
     public function actividades()
     {
         return $this->hasMany(Actividades::class, 'idMunicipio');
+    }
+
+    /**
+     * Obtener las coordenadas del municipio
+     */
+    public function getCoordenadas()
+    {
+        return [
+            'lat' => $this->latitud,
+            'lng' => $this->longitud
+        ];
     }
 }

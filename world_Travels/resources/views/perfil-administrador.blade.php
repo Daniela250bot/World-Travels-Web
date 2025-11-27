@@ -9,7 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Variable para JavaScript -->
-    <meta name="jwt-token" content="{{ session('jwt_token') }}">
+    <meta name="jwt-token" content="{{ session('jwt_token', '') }}">
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -17,8 +17,8 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
             <nav class="space-x-6">
+                <a href="{{ route('dashboard-administrador') }}" class="text-gray-700 hover:text-blue-600 transition">Panel Administrativo</a>
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
@@ -27,7 +27,7 @@
         </div>
     </header>
 
-    <!-- Perfil del Usuario - Pantalla Independiente -->
+    <!-- Perfil del Administrador - Pantalla Independiente -->
     <main class="min-h-screen py-12">
         <div class="max-w-4xl mx-auto px-4">
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-2xl p-8 border border-blue-100">
@@ -37,11 +37,11 @@
                         <img id="foto-perfil-preview-view" src="" alt="Foto de perfil"
                               class="w-40 h-40 rounded-full object-cover border-8 border-white shadow-xl mx-auto">
                         <div id="foto-perfil-placeholder-view" class="w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-6xl mx-auto shadow-xl">
-                            U
+                            A
                         </div>
                     </div>
-                    <h1 id="perfil-nombre-completo" class="text-4xl font-bold text-gray-800 mb-2">Usuario</h1>
-                    <p class="text-lg text-gray-600">AQUI ENCONTRARAS LO MEJOR DE BOYACÁ</p>
+                    <h1 id="perfil-nombre-completo" class="text-4xl font-bold text-gray-800 mb-2">Administrador</h1>
+                    <p class="text-lg text-gray-600">GESTIÓN TOTAL DEL SISTEMA WORLD TRAVELS</p>
                 </div>
 
                 <!-- Información del Perfil en Modo Vista -->
@@ -59,7 +59,7 @@
                             <div class="space-y-2 text-gray-700">
                                 <p><span class="font-medium">Nombre:</span> <span id="view-nombre">Cargando...</span></p>
                                 <p><span class="font-medium">Apellido:</span> <span id="view-apellido">Cargando...</span></p>
-                                <p><span class="font-medium">Nacionalidad:</span> <span id="view-nacionalidad">Cargando...</span></p>
+                                <p><span class="font-medium">Documento:</span> <span id="view-documento">Cargando...</span></p>
                             </div>
                         </div>
 
@@ -83,24 +83,18 @@
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-lg font-semibold text-gray-800">Biografía</h4>
+                            <h4 class="text-lg font-semibold text-gray-800">Información del Sistema</h4>
                         </div>
-                        <p id="view-biografia" class="text-gray-700 leading-relaxed">Cargando...</p>
-                    </div>
-
-                    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
-                        <div class="flex items-center mb-3">
-                            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
-                            </div>
-                            <h4 class="text-lg font-semibold text-gray-800">Privacidad</h4>
+                        <div class="space-y-2 text-gray-700">
+                            <p><span class="font-medium">Rol:</span> Administrador del Sistema</p>
+                            <p><span class="font-medium">Nivel de Acceso:</span> Completo</p>
+                            <p><span class="font-medium">Funciones:</span> Gestión total del sistema WORLD TRAVELS</p>
+                            <p><span class="font-medium">ID de Usuario:</span> <span id="view-id">Cargando...</span></p>
+                            <p><span class="font-medium">Fecha de Registro:</span> <span id="view-fecha-registro">Cargando...</span></p>
                         </div>
-                        <p id="view-privacidad" class="text-gray-700">Cargando...</p>
                     </div>
 
                     <!-- Botones de Acción -->
@@ -115,7 +109,7 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
-                            Eliminar Perfil
+                            Eliminar Cuenta
                         </button>
                     </div>
                 </div>
@@ -150,21 +144,18 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nacionalidad</label>
-                        <input type="text" id="perfil-nacionalidad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Documento</label>
+                        <input type="text" id="perfil-documento" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" readonly>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Biografía</label>
-                        <textarea id="perfil-biografia" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Cuéntanos un poco sobre ti..."></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña (opcional)</label>
+                        <input type="password" id="perfil-contraseña" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Dejar vacío para no cambiar">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Privacidad del Perfil</label>
-                        <select id="perfil-privacidad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="publico">Público</option>
-                            <option value="privado">Privado</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
+                        <input type="password" id="perfil-confirmar-contraseña" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
 
                     <!-- Gestión de Foto de Perfil -->
@@ -175,7 +166,7 @@
                                 <img id="foto-perfil-preview" src="" alt="Foto de perfil"
                                       class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
                                 <div id="foto-perfil-placeholder" class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xl">
-                                    U
+                                    A
                                 </div>
                             </div>
                             <div class="flex gap-3">
@@ -211,11 +202,12 @@
         </div>
     </main>
 
+
     <script>
         const jwtToken = document.querySelector('meta[name="jwt-token"]').getAttribute('content');
         if (jwtToken) {
             localStorage.setItem('token', jwtToken);
-            localStorage.setItem('user_role', 'turista');
+            localStorage.setItem('user_role', 'administrador');
         }
 
         let currentUser = null;
@@ -257,7 +249,7 @@
 
         // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM cargado, inicializando perfil...');
+            console.log('DOM cargado, inicializando perfil de administrador...');
 
             const token = localStorage.getItem('token');
             console.log('Token encontrado:', !!token);
@@ -284,39 +276,37 @@
         });
 
         function loadPerfil() {
-            console.log('Cargando perfil del usuario...');
+            console.log('Cargando perfil del administrador...');
 
-            // Cargar información del perfil desde el endpoint específico de turista
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil')
+            // Cargar información del perfil
+            fetchWithAuth('http://127.0.0.1:8000/api/admin/me')
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.perfil) {
-                    const perfil = data.perfil;
+                if (data.success && data.administrador) {
+                    const admin = data.administrador;
 
                     // Llenar modo vista
-                    document.getElementById('view-nombre').textContent = perfil.nombre || 'No especificado';
-                    document.getElementById('view-apellido').textContent = perfil.apellido || 'No especificado';
-                    document.getElementById('view-email').textContent = perfil.email || 'No especificado';
-                    document.getElementById('view-telefono').textContent = perfil.telefono || 'No especificado';
-                    document.getElementById('view-nacionalidad').textContent = perfil.nacionalidad || 'No especificada';
-                    document.getElementById('view-biografia').textContent = perfil.biografia || 'Sin biografía';
-                    document.getElementById('view-privacidad').textContent = perfil.privacidad_perfil === 'publico' ? 'Perfil Público' : 'Perfil Privado';
+                    document.getElementById('view-nombre').textContent = admin.nombre || 'No especificado';
+                    document.getElementById('view-apellido').textContent = admin.apellido || 'No especificado';
+                    document.getElementById('view-email').textContent = admin.correo_electronico || 'No especificado';
+                    document.getElementById('view-telefono').textContent = admin.telefono || 'No especificado';
+                    document.getElementById('view-documento').textContent = admin.documento || 'No especificado';
+                    document.getElementById('view-id').textContent = admin.id || 'N/A';
+                    document.getElementById('view-fecha-registro').textContent = admin.fecha_registro ? new Date(admin.fecha_registro).toLocaleDateString() : 'No disponible';
 
                     // Nombre completo en el header
-                    const nombreCompleto = `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim() || 'Usuario';
+                    const nombreCompleto = `${admin.nombre || ''} ${admin.apellido || ''}`.trim() || 'Administrador';
                     document.getElementById('perfil-nombre-completo').textContent = nombreCompleto;
 
                     // Llenar modo edición
-                    document.getElementById('perfil-nombre').value = perfil.nombre || '';
-                    document.getElementById('perfil-apellido').value = perfil.apellido || '';
-                    document.getElementById('perfil-email').value = perfil.email || '';
-                    document.getElementById('perfil-telefono').value = perfil.telefono || '';
-                    document.getElementById('perfil-nacionalidad').value = perfil.nacionalidad || '';
-                    document.getElementById('perfil-biografia').value = perfil.biografia || '';
-                    document.getElementById('perfil-privacidad').value = perfil.privacidad_perfil || 'publico';
+                    document.getElementById('perfil-nombre').value = admin.nombre || '';
+                    document.getElementById('perfil-apellido').value = admin.apellido || '';
+                    document.getElementById('perfil-email').value = admin.correo_electronico || '';
+                    document.getElementById('perfil-telefono').value = admin.telefono || '';
+                    document.getElementById('perfil-documento').value = admin.documento || '';
 
                     // Mostrar foto de perfil
-                    updateFotoPerfilPreview(perfil.foto_perfil, perfil.name || perfil.nombre);
+                    updateFotoPerfilPreview(admin.foto_perfil, admin.nombre);
                 }
             })
             .catch(error => console.error('Error cargando información del perfil:', error));
@@ -334,7 +324,7 @@
             const previewView = document.getElementById('foto-perfil-preview-view');
             const placeholderView = document.getElementById('foto-perfil-placeholder-view');
 
-            const inicial = nombre ? nombre.charAt(0).toUpperCase() : 'U';
+            const inicial = nombre ? nombre.charAt(0).toUpperCase() : 'A';
 
             if (fotoUrl) {
                 const fotoSrc = fotoUrl.startsWith('http') ? fotoUrl : `/storage/${fotoUrl}`;
@@ -382,22 +372,31 @@
         }
 
         function guardarPerfil() {
-            const biografia = document.getElementById('perfil-biografia').value;
-            const privacidad = document.getElementById('perfil-privacidad').value;
-            const telefono = document.getElementById('perfil-telefono').value;
             const nombre = document.getElementById('perfil-nombre').value;
             const apellido = document.getElementById('perfil-apellido').value;
+            const telefono = document.getElementById('perfil-telefono').value;
+            const contraseña = document.getElementById('perfil-contraseña').value;
+            const confirmarContraseña = document.getElementById('perfil-confirmar-contraseña').value;
+
+            // Validación de contraseñas
+            if (contraseña && contraseña !== confirmarContraseña) {
+                showNotification('Las contraseñas no coinciden', 'error');
+                return;
+            }
 
             const data = {
-                biografia: biografia,
-                privacidad_perfil: privacidad,
-                telefono: telefono,
                 nombre: nombre,
-                apellido: apellido
+                apellido: apellido,
+                telefono: telefono
             };
 
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil', {
-                method: 'POST',
+            if (contraseña) {
+                data.contraseña = contraseña;
+                data.contraseña_confirmation = confirmarContraseña;
+            }
+
+            fetchWithAuth('http://127.0.0.1:8000/api/admin/perfil', {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -422,33 +421,33 @@
         }
 
         function eliminarPerfil() {
-            if (!confirm('¿Estás completamente seguro de que quieres eliminar tu perfil?\n\nEsta acción no se puede deshacer y perderás:\n- Todas tus reservas\n- Todas tus publicaciones\n- Tu acceso a la plataforma\n\n¿Deseas continuar?')) {
+            if (!confirm('¿Estás completamente seguro de que quieres eliminar tu cuenta?\n\nEsta acción no se puede deshacer y perderás:\n- Tu acceso de administrador\n- Todos tus datos personales\n\n¿Deseas continuar?')) {
                 return;
             }
 
-            if (!confirm('Última confirmación: ¿Realmente quieres eliminar permanentemente tu perfil de WORLD TRAVELS?')) {
+            if (!confirm('Última confirmación: ¿Realmente quieres eliminar permanentemente tu cuenta de administrador?')) {
                 return;
             }
 
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/perfil', {
+            fetchWithAuth('http://127.0.0.1:8000/api/admin/perfil', {
                 method: 'DELETE'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showNotification('Perfil eliminado exitosamente. Serás redirigido al inicio.', 'success');
+                    showNotification('Cuenta eliminada exitosamente. Serás redirigido al inicio.', 'success');
                     // Limpiar token y redirigir
                     setTimeout(() => {
                         localStorage.removeItem('token');
                         window.location.href = '{{ route("home") }}';
                     }, 2000);
                 } else {
-                    showNotification(data.message || 'Error al eliminar perfil', 'error');
+                    showNotification(data.message || 'Error al eliminar cuenta', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error eliminando perfil:', error);
-                showNotification('Error al eliminar el perfil', 'error');
+                showNotification('Error al eliminar la cuenta', 'error');
             });
         }
 
@@ -462,7 +461,7 @@
             btnCambiar.disabled = true;
             btnCambiar.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700 mx-auto"></div>';
 
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/foto-perfil', {
+            fetchWithAuth('http://127.0.0.1:8000/api/admin/foto-perfil', {
                 method: 'POST',
                 body: formData
             })
@@ -492,7 +491,7 @@
                 return;
             }
 
-            fetchWithAuth('http://127.0.0.1:8000/api/turista/foto-perfil', {
+            fetchWithAuth('http://127.0.0.1:8000/api/admin/foto-perfil', {
                 method: 'DELETE'
             })
             .then(response => response.json())

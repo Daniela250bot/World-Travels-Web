@@ -165,7 +165,8 @@ class AuthController extends Controller
     {
         Log::info('Web login attempt', [
             'email' => $request->email,
-            'has_password' => !empty($request->password)
+            'has_password' => !empty($request->password),
+            'all_data' => $request->all()
         ]);
 
         // Primero intentar con campos en minúscula (estándar)
@@ -198,6 +199,13 @@ class AuthController extends Controller
         // Buscar usuario en tabla users (centralizada)
         $user = User::where('email', $request->email)->first();
 
+        Log::info('User lookup result', [
+            'email' => $request->email,
+            'user_found' => !is_null($user),
+            'user_role' => $user ? $user->role : null,
+            'user_verified' => $user ? $user->verificado : null
+        ]);
+
         if ($user && Hash::check($request->password, $user->password)) {
             // Autenticar al usuario en la sesión web de Laravel
             Auth::login($user);
@@ -215,7 +223,11 @@ class AuthController extends Controller
             return redirect()->route('dashboard')->with('jwt_token', $token);
         }
 
-        Log::warning('Web login failed: invalid credentials', ['email' => $request->email]);
+        Log::warning('Web login failed: invalid credentials', [
+            'email' => $request->email,
+            'user_exists' => !is_null($user),
+            'password_check' => $user ? Hash::check($request->password, $user->password) : false
+        ]);
         return back()->withErrors(['email' => 'Credenciales inválidas'])->withInput();
     }
 

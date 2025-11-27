@@ -1,0 +1,153 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class MunicipiosCoordsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     * Coordenadas de municipios de Boyacá, Colombia
+     */
+    public function run(): void
+    {
+        // Coordenadas de municipios de Boyacá
+        $municipios = [
+            'Tunja' => ['latitud' => 5.5353, 'longitud' => -73.3678],
+            'Duitama' => ['latitud' => 5.8267, 'longitud' => -73.0333],
+            'Sogamoso' => ['latitud' => 5.7144, 'longitud' => -72.9336],
+            'Chiquinquirá' => ['latitud' => 5.6167, 'longitud' => -73.8167],
+            'Paipa' => ['latitud' => 5.7833, 'longitud' => -73.1167],
+            'Villa de Leyva' => ['latitud' => 5.6333, 'longitud' => -73.5333],
+            'Monguí' => ['latitud' => 5.7167, 'longitud' => -72.8333],
+            'Ráquira' => ['latitud' => 5.5333, 'longitud' => -73.6333],
+            'Nobsa' => ['latitud' => 5.7667, 'longitud' => -72.9333],
+            'Tibasosa' => ['latitud' => 5.7500, 'longitud' => -73.0000],
+            'Firavitoba' => ['latitud' => 5.6667, 'longitud' => -72.9833],
+            'Iza' => ['latitud' => 5.6167, 'longitud' => -72.9833],
+            'Tota' => ['latitud' => 5.5500, 'longitud' => -72.9833],
+            'Aquitania' => ['latitud' => 5.5167, 'longitud' => -72.8833],
+            'Gámeza' => ['latitud' => 5.8000, 'longitud' => -72.7333],
+            'Mongua' => ['latitud' => 5.7500, 'longitud' => -72.7833],
+            'Tópaga' => ['latitud' => 5.7667, 'longitud' => -72.8500],
+            'Corrales' => ['latitud' => 5.8167, 'longitud' => -72.8500],
+            'Busbanzá' => ['latitud' => 5.8333, 'longitud' => -72.8667],
+            'Floresta' => ['latitud' => 5.8500, 'longitud' => -72.9167],
+            'Betéitiva' => ['latitud' => 5.9000, 'longitud' => -72.8000],
+            'Tasco' => ['latitud' => 5.9167, 'longitud' => -72.7833],
+            'Socha' => ['latitud' => 5.9833, 'longitud' => -72.6833],
+            'Socotá' => ['latitud' => 6.0333, 'longitud' => -72.6333],
+            'Jericó' => ['latitud' => 6.1500, 'longitud' => -72.5833],
+            'Chita' => ['latitud' => 6.1833, 'longitud' => -72.4667],
+            'El Cocuy' => ['latitud' => 6.4167, 'longitud' => -72.4333],
+            'Güicán' => ['latitud' => 6.4667, 'longitud' => -72.4167],
+            'Panqueba' => ['latitud' => 6.4333, 'longitud' => -72.4500],
+            'El Espino' => ['latitud' => 6.5000, 'longitud' => -72.4833],
+            'Guacamayas' => ['latitud' => 6.4500, 'longitud' => -72.5000],
+            'Chiscas' => ['latitud' => 6.5500, 'longitud' => -72.4833],
+            'Cubará' => ['latitud' => 7.0000, 'longitud' => -72.1000],
+            'Boavita' => ['latitud' => 6.3333, 'longitud' => -72.5833],
+            'La Uvita' => ['latitud' => 6.3000, 'longitud' => -72.5500],
+            'San Mateo' => ['latitud' => 6.4000, 'longitud' => -72.5500],
+            'Sativanorte' => ['latitud' => 6.1333, 'longitud' => -72.7000],
+            'Sativasur' => ['latitud' => 6.0833, 'longitud' => -72.7167],
+            'Susacón' => ['latitud' => 6.2333, 'longitud' => -72.6833],
+            'Tipacoque' => ['latitud' => 6.4167, 'longitud' => -72.6833],
+            'Soatá' => ['latitud' => 6.3333, 'longitud' => -72.6833],
+            'Covarachía' => ['latitud' => 6.5000, 'longitud' => -72.7333],
+            'Capitanejo' => ['latitud' => 6.5333, 'longitud' => -72.7000],
+            'Macaravita' => ['latitud' => 6.5000, 'longitud' => -72.6000],
+            'San José de Miranda' => ['latitud' => 6.5833, 'longitud' => -72.7167],
+            'Enciso' => ['latitud' => 6.6167, 'longitud' => -72.7000],
+            'Carcasí' => ['latitud' => 6.6333, 'longitud' => -72.6167],
+            'Belén' => ['latitud' => 5.9833, 'longitud' => -72.9167],
+            'Cerinza' => ['latitud' => 5.9167, 'longitud' => -72.9833],
+            'Santa Rosa de Viterbo' => ['latitud' => 5.8833, 'longitud' => -72.9833],
+            'Paz de Río' => ['latitud' => 5.9833, 'longitud' => -72.7500],
+            'Sáchica' => ['latitud' => 5.5833, 'longitud' => -73.5333],
+            'Sutamarchán' => ['latitud' => 5.6167, 'longitud' => -73.6167],
+            'Tinjacá' => ['latitud' => 5.5833, 'longitud' => -73.6500],
+            'Gachantivá' => ['latitud' => 5.7500, 'longitud' => -73.5333],
+            'Arcabuco' => ['latitud' => 5.7500, 'longitud' => -73.4333],
+            'Moniquirá' => ['latitud' => 5.8833, 'longitud' => -73.5667],
+            'Togüí' => ['latitud' => 5.9333, 'longitud' => -73.5167],
+            'San José de Pare' => ['latitud' => 5.9833, 'longitud' => -73.5500],
+            'Chitaraque' => ['latitud' => 6.0167, 'longitud' => -73.4833],
+            'Santana' => ['latitud' => 6.0500, 'longitud' => -73.4833],
+            'Barbosa' => ['latitud' => 5.9333, 'longitud' => -73.6167],
+            'Puente Nacional' => ['latitud' => 5.8833, 'longitud' => -73.6833],
+            'Vélez' => ['latitud' => 6.0167, 'longitud' => -73.6833],
+            'Chipatá' => ['latitud' => 5.9500, 'longitud' => -73.6500],
+            'Güepsa' => ['latitud' => 6.0333, 'longitud' => -73.5833],
+            'Jesús María' => ['latitud' => 5.8667, 'longitud' => -73.7667],
+            'Albania' => ['latitud' => 5.7667, 'longitud' => -73.8500],
+            'Saboyá' => ['latitud' => 5.7000, 'longitud' => -73.7667],
+            'San Miguel de Sema' => ['latitud' => 5.5500, 'longitud' => -73.7333],
+            'Caldas' => ['latitud' => 5.5667, 'longitud' => -73.8833],
+            'Buenavista' => ['latitud' => 5.4833, 'longitud' => -73.9500],
+            'Coper' => ['latitud' => 5.4667, 'longitud' => -74.0500],
+            'La Victoria' => ['latitud' => 5.5167, 'longitud' => -74.2333],
+            'Maripí' => ['latitud' => 5.5500, 'longitud' => -74.0167],
+            'Muzo' => ['latitud' => 5.5333, 'longitud' => -74.1000],
+            'Otanche' => ['latitud' => 5.6833, 'longitud' => -74.2000],
+            'Pauna' => ['latitud' => 5.6667, 'longitud' => -73.9833],
+            'Puerto Boyacá' => ['latitud' => 5.9833, 'longitud' => -74.5833],
+            'Quípama' => ['latitud' => 5.5167, 'longitud' => -74.1833],
+            'San Pablo de Borbur' => ['latitud' => 5.6500, 'longitud' => -74.0833],
+            'Tununguá' => ['latitud' => 5.7333, 'longitud' => -73.9333],
+            'Briceño' => ['latitud' => 5.6833, 'longitud' => -73.9167],
+            'Combita' => ['latitud' => 5.6333, 'longitud' => -73.3333],
+            'Cucaita' => ['latitud' => 5.5500, 'longitud' => -73.4500],
+            'Chíquiza' => ['latitud' => 5.6000, 'longitud' => -73.4833],
+            'Chivatá' => ['latitud' => 5.5667, 'longitud' => -73.2833],
+            'Motavita' => ['latitud' => 5.5833, 'longitud' => -73.3667],
+            'Oicatá' => ['latitud' => 5.6000, 'longitud' => -73.3167],
+            'Samacá' => ['latitud' => 5.4833, 'longitud' => -73.4833],
+            'Siachoque' => ['latitud' => 5.5167, 'longitud' => -73.2333],
+            'Sora' => ['latitud' => 5.5667, 'longitud' => -73.4500],
+            'Soracá' => ['latitud' => 5.5000, 'longitud' => -73.3333],
+            'Sotaquirá' => ['latitud' => 5.7667, 'longitud' => -73.2500],
+            'Toca' => ['latitud' => 5.5667, 'longitud' => -73.1833],
+            'Tuta' => ['latitud' => 5.6833, 'longitud' => -73.2333],
+            'Ventaquemada' => ['latitud' => 5.3667, 'longitud' => -73.5167],
+            'Viracachá' => ['latitud' => 5.4333, 'longitud' => -73.3000],
+            'Boyacá' => ['latitud' => 5.4500, 'longitud' => -73.3667],
+            'Ciénega' => ['latitud' => 5.4000, 'longitud' => -73.2833],
+            'Jenesano' => ['latitud' => 5.3833, 'longitud' => -73.3667],
+            'Nuevo Colón' => ['latitud' => 5.3500, 'longitud' => -73.4500],
+            'Ramiriquí' => ['latitud' => 5.4000, 'longitud' => -73.3333],
+            'Rondón' => ['latitud' => 5.3667, 'longitud' => -73.2000],
+            'Tibaná' => ['latitud' => 5.3167, 'longitud' => -73.4000],
+            'Turmequé' => ['latitud' => 5.3167, 'longitud' => -73.5000],
+            'Úmbita' => ['latitud' => 5.2167, 'longitud' => -73.4500],
+            'Chinavita' => ['latitud' => 5.1833, 'longitud' => -73.3667],
+            'Garagoa' => ['latitud' => 5.0833, 'longitud' => -73.3667],
+            'Macanal' => ['latitud' => 4.9833, 'longitud' => -73.3167],
+            'Pachavita' => ['latitud' => 5.1333, 'longitud' => -73.4000],
+            'San Luis de Gaceno' => ['latitud' => 4.8167, 'longitud' => -73.1667],
+            'Santa María' => ['latitud' => 4.8500, 'longitud' => -73.2667],
+            'Campohermoso' => ['latitud' => 5.0167, 'longitud' => -73.1167],
+            'Miraflores' => ['latitud' => 5.2000, 'longitud' => -73.1500],
+            'Páez' => ['latitud' => 5.1167, 'longitud' => -73.0500],
+            'Berbeo' => ['latitud' => 5.2333, 'longitud' => -73.1167],
+            'Zetaquira' => ['latitud' => 5.2667, 'longitud' => -73.1667],
+            'San Eduardo' => ['latitud' => 5.1000, 'longitud' => -73.0833],
+            'Labranzagrande' => ['latitud' => 5.5500, 'longitud' => -72.5833],
+            'Pajarito' => ['latitud' => 5.4000, 'longitud' => -72.7167],
+            'Paya' => ['latitud' => 5.6167, 'longitud' => -72.4333],
+            'Pisba' => ['latitud' => 5.7500, 'longitud' => -72.4833],
+        ];
+
+        foreach ($municipios as $nombre => $coords) {
+            DB::table('municipios')
+                ->where('Nombre_Municipio', 'LIKE', '%' . $nombre . '%')
+                ->update([
+                    'latitud' => $coords['latitud'],
+                    'longitud' => $coords['longitud']
+                ]);
+        }
+    }
+}

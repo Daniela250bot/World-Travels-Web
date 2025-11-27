@@ -13,9 +13,10 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
             <nav class="space-x-6">
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
+                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Administrador</a>
+                <a href="{{ route('dashboard-administrador') }}" class="text-gray-700 hover:text-blue-600 transition">Panel</a>
+                <a href="{{ route('perfil-administrador') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Perfil</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
@@ -41,7 +42,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <button onclick="manageUsers()" class="bg-blue-600 text-white p-6 rounded-lg hover:bg-blue-700 transition text-center">
                     <h4 class="text-xl font-semibold mb-2">Gestionar Usuarios</h4>
-                    <p>Administra cuentas de usuario</p>
+                    <p>Administra cuentas de usuarios</p>
                 </button>
                 <button onclick="manageActivities()" class="bg-green-600 text-white p-6 rounded-lg hover:bg-green-700 transition text-center">
                     <h4 class="text-xl font-semibold mb-2">Gestionar Actividades</h4>
@@ -67,6 +68,10 @@
                     <h4 class="text-xl font-semibold mb-2">Publicaciones</h4>
                     <p>Modera contenido de usuarios</p>
                 </button>
+                <a href="{{ route('perfil-administrador') }}" class="bg-indigo-600 text-white p-6 rounded-lg hover:bg-indigo-700 transition text-center block text-center">
+                    <h4 class="text-xl font-semibold mb-2">Mi Perfil</h4>
+                    <p>Editar información personal</p>
+                </a>
                 
             </div>
         </div>
@@ -150,15 +155,15 @@
                         <input type="hidden" id="categoryId" name="categoryId">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                                <label for="categoryNombre" class="block text-sm font-medium text-gray-700">Nombre</label>
                                 <input type="text" id="categoryNombre" name="nombre" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <label for="categoryDescripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
                                 <textarea id="categoryDescripcion" name="descripcion" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
+                                <label for="categoryImagen" class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
                                 <input type="url" id="categoryImagen" name="imagen" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
@@ -185,43 +190,43 @@
                     <form id="createActivityForm">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
+                                <label for="nombre_actividad" class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
                                 <input type="text" id="nombre_actividad" name="Nombre_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <label for="idCategoria" class="block text-sm font-medium text-gray-700">Categoría</label>
                                 <select id="idCategoria" name="idCategoria" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar categoría</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Municipio</label>
+                                <label for="idMunicipio" class="block text-sm font-medium text-gray-700">Municipio</label>
                                 <select id="idMunicipio" name="idMunicipio" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar municipio</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <label for="fecha_actividad" class="block text-sm font-medium text-gray-700">Fecha</label>
                                 <input type="date" id="fecha_actividad" name="Fecha_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Hora</label>
+                                <label for="hora_actividad" class="block text-sm font-medium text-gray-700">Hora</label>
                                 <input type="time" id="hora_actividad" name="Hora_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Precio</label>
+                                <label for="precio" class="block text-sm font-medium text-gray-700">Precio</label>
                                 <input type="number" id="precio" name="Precio" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
+                                <label for="cupo_maximo" class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
                                 <input type="number" id="cupo_maximo" name="Cupo_Maximo" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Ubicación</label>
+                                <label for="ubicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
                                 <input type="text" id="ubicacion" name="Ubicacion" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
+                                <label for="imagen" class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
                                 <input type="url" id="imagen" name="Imagen" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                         </div>
@@ -243,47 +248,47 @@
                         <input type="hidden" id="editActivityId">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
+                                <label for="editNombre_Actividad" class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
                                 <input type="text" id="editNombre_Actividad" name="Nombre_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Categoría (No editable)</label>
+                                <label for="editIdCategoria" class="block text-sm font-medium text-gray-700">Categoría (No editable)</label>
                                 <select id="editIdCategoria" disabled class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100">
                                     <option value="">Seleccionar categoría</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Municipio (No editable)</label>
+                                <label for="editIdMunicipio" class="block text-sm font-medium text-gray-700">Municipio (No editable)</label>
                                 <select id="editIdMunicipio" disabled class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100">
                                     <option value="">Seleccionar municipio</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <label for="editFecha_Actividad" class="block text-sm font-medium text-gray-700">Fecha</label>
                                 <input type="date" id="editFecha_Actividad" name="Fecha_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Hora</label>
+                                <label for="editHora_Actividad" class="block text-sm font-medium text-gray-700">Hora</label>
                                 <input type="time" id="editHora_Actividad" name="Hora_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Precio</label>
+                                <label for="editPrecio" class="block text-sm font-medium text-gray-700">Precio</label>
                                 <input type="number" id="editPrecio" name="Precio" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
+                                <label for="editCupo_Maximo" class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
                                 <input type="number" id="editCupo_Maximo" name="Cupo_Maximo" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Ubicación</label>
+                                <label for="editUbicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
                                 <input type="text" id="editUbicacion" name="Ubicacion" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <label for="editDescripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
                                 <textarea id="editDescripcion" name="Descripcion" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
+                                <label for="editImagen" class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
                                 <input type="url" id="editImagen" name="Imagen" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                         </div>
@@ -319,31 +324,31 @@
                     <form id="createUserForm">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                                <label for="Nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
                                 <input type="text" id="Nombre" name="Nombre" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Apellido</label>
+                                <label for="Apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
                                 <input type="text" id="Apellido" name="Apellido" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
+                                <label for="Email" class="block text-sm font-medium text-gray-700">Email</label>
                                 <input type="email" id="Email" name="Email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                                <label for="Contraseña" class="block text-sm font-medium text-gray-700">Contraseña</label>
                                 <input type="password" id="Contraseña" name="Contraseña" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                                <label for="Telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
                                 <input type="text" id="Telefono" name="Telefono" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
+                                <label for="Nacionalidad" class="block text-sm font-medium text-gray-700">Nacionalidad</label>
                                 <input type="text" id="Nacionalidad" name="Nacionalidad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Rol</label>
+                                <label for="Rol" class="block text-sm font-medium text-gray-700">Rol</label>
                                 <select id="Rol" name="Rol" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar rol</option>
                                     <option value="Turista">Turista</option>
@@ -370,31 +375,31 @@
                         <input type="hidden" id="editUserId" name="id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                                <label for="editNombre" class="block text-sm font-medium text-gray-700">Nombre</label>
                                 <input type="text" id="editNombre" name="Nombre" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Apellido</label>
+                                <label for="editApellido" class="block text-sm font-medium text-gray-700">Apellido</label>
                                 <input type="text" id="editApellido" name="Apellido" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
+                                <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
                                 <input type="email" id="editEmail" name="Email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Contraseña (dejar vacío para no cambiar)</label>
+                                <label for="editContraseña" class="block text-sm font-medium text-gray-700">Contraseña (dejar vacío para no cambiar)</label>
                                 <input type="password" id="editContraseña" name="Contraseña" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                                <label for="editTelefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
                                 <input type="text" id="editTelefono" name="Telefono" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
+                                <label for="editNacionalidad" class="block text-sm font-medium text-gray-700">Nacionalidad</label>
                                 <input type="text" id="editNacionalidad" name="Nacionalidad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Rol</label>
+                                <label for="editRol" class="block text-sm font-medium text-gray-700">Rol</label>
                                 <select id="editRol" name="Rol" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar rol</option>
                                     <option value="Turista">Turista</option>
@@ -421,11 +426,11 @@
                         <input type="hidden" id="municipioId" name="id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Nombre del Municipio</label>
+                                <label for="Nombre_Municipio" class="block text-sm font-medium text-gray-700">Nombre del Municipio</label>
                                 <input type="text" id="Nombre_Municipio" name="Nombre_Municipio" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Departamento</label>
+                                <label for="idDepartamento" class="block text-sm font-medium text-gray-700">Departamento</label>
                                 <select id="idDepartamento" name="idDepartamento" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar departamento</option>
                                 </select>
@@ -449,47 +454,47 @@
                         <input type="hidden" id="empresaId" name="id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Número</label>
+                                <label for="numero" class="block text-sm font-medium text-gray-700">Número</label>
                                 <input type="text" id="numero" name="numero" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
                                 <input type="text" id="nombre" name="nombre" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
                                 <textarea id="descripcion" name="descripcion" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Dirección</label>
+                                <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
                                 <input type="text" id="direccion" name="direccion" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Ciudad</label>
+                                <label for="ciudad" class="block text-sm font-medium text-gray-700">Ciudad</label>
                                 <input type="text" id="ciudad" name="ciudad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                                <label for="correo" class="block text-sm font-medium text-gray-700">Correo</label>
                                 <input type="email" id="correo" name="correo" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Contraseña (dejar vacío para no cambiar)</label>
+                                <label for="contraseña" class="block text-sm font-medium text-gray-700">Contraseña (dejar vacío para no cambiar)</label>
                                 <input type="password" id="contraseña" name="contraseña" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Código de Verificación</label>
+                                <label for="codigo_verificacion" class="block text-sm font-medium text-gray-700">Código de Verificación</label>
                                 <input type="text" id="codigo_verificacion" name="codigo_verificacion" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
                                 <input type="text" id="telefono" name="telefono" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Sitio Web</label>
+                                <label for="sitio_web" class="block text-sm font-medium text-gray-700">Sitio Web</label>
                                 <input type="url" id="sitio_web" name="sitio_web" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Políticas</label>
+                                <label for="politicas" class="block text-sm font-medium text-gray-700">Políticas</label>
                                 <textarea id="politicas" name="politicas" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
                         </div>
@@ -574,47 +579,47 @@
                         <input type="hidden" id="empresaIdActividad">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
+                                <label for="empresaNombreActividad" class="block text-sm font-medium text-gray-700">Nombre de la Actividad</label>
                                 <input type="text" id="empresaNombreActividad" name="Nombre_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <label for="empresaIdCategoria" class="block text-sm font-medium text-gray-700">Categoría</label>
                                 <select id="empresaIdCategoria" name="idCategoria" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar categoría</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Municipio</label>
+                                <label for="empresaIdMunicipio" class="block text-sm font-medium text-gray-700">Municipio</label>
                                 <select id="empresaIdMunicipio" name="idMunicipio" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Seleccionar municipio</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <label for="empresaFechaActividad" class="block text-sm font-medium text-gray-700">Fecha</label>
                                 <input type="date" id="empresaFechaActividad" name="Fecha_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Hora</label>
+                                <label for="empresaHoraActividad" class="block text-sm font-medium text-gray-700">Hora</label>
                                 <input type="time" id="empresaHoraActividad" name="Hora_Actividad" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Precio</label>
+                                <label for="empresaPrecio" class="block text-sm font-medium text-gray-700">Precio</label>
                                 <input type="number" id="empresaPrecio" name="Precio" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
+                                <label for="empresaCupoMaximo" class="block text-sm font-medium text-gray-700">Cupo Máximo</label>
                                 <input type="number" id="empresaCupoMaximo" name="Cupo_Maximo" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Ubicación</label>
+                                <label for="empresaUbicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
                                 <input type="text" id="empresaUbicacion" name="Ubicacion" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <label for="empresaDescripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
                                 <textarea id="empresaDescripcion" name="Descripcion" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
+                                <label for="empresaImagen" class="block text-sm font-medium text-gray-700">Imagen (URL)</label>
                                 <input type="url" id="empresaImagen" name="Imagen" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
                         </div>
@@ -630,17 +635,15 @@
 
     <script>
         // Guardar el token JWT en localStorage después del login
-        @if(session('jwt_token'))
-            localStorage.setItem('token', '{{ session("jwt_token") }}');
-            localStorage.setItem('user_role', 'administrador');
-        @endif
+        localStorage.setItem('token', '{{ session("jwt_token", "") }}');
+        localStorage.setItem('user_role', 'administrador');
 
         // Función auxiliar para hacer fetch con manejo automático de errores 401
         function fetchWithAuth(url, options = {}) {
             const token = localStorage.getItem('token');
             if (!token) {
                 alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-                window.location.href = '{{ route("login") }}';
+                window.location.href = '/login';
                 return Promise.reject(new Error('No token found'));
             }
 
@@ -654,7 +657,7 @@
                     if (response.status === 401) {
                         alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
                         localStorage.removeItem('token');
-                        window.location.href = '{{ route("login") }}';
+                        window.location.href = '/login';
                         throw new Error('Unauthorized');
                     }
                     return response;
@@ -664,7 +667,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = '{{ route("login") }}';
+                window.location.href = '/login';
                 return;
             }
 
@@ -688,7 +691,7 @@
             .catch(error => {
                 console.error('Error cargando datos del usuario:', error);
                 localStorage.removeItem('token');
-                window.location.href = '{{ route("login") }}';
+                window.location.href = '/login';
             });
         }
 
@@ -1010,7 +1013,7 @@
         function manageCategories() { loadCategoriesList(); document.getElementById('categoriesModal').classList.remove('hidden'); }
         function manageMunicipios() { loadMunicipioList(); }
         function manageCompanies() { loadCompanyList(); }
-        function viewReports() { window.location.href = '{{ route("reportes") }}'; }
+        function viewReports() { window.location.href = '/reportes'; }
         function editUser(id) {
             fetch(`http://127.0.0.1:8000/api/usuarios/${id}`, {
                 headers: {
@@ -2565,7 +2568,7 @@
         function manageCategories() { loadCategoriesList(); document.getElementById('categoriesModal').classList.remove('hidden'); }
         function manageMunicipios() { loadMunicipioList(); }
         function manageCompanies() { loadCompanyList(); }
-        function viewReports() { window.location.href = '{{ route("reportes") }}'; }
+        function viewReports() { window.location.href = '/reportes'; }
     </script>
 
     <!-- Modal para gestión de publicaciones -->

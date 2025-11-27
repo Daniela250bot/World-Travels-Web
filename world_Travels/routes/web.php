@@ -56,6 +56,16 @@ Route::get('/dashboard-empresa', function () {
     return view('dashboard-empresa');
 })->name('dashboard-empresa');
 
+// Ruta para dashboard de administrador
+Route::get('/dashboard-administrador', function () {
+    return view('dashboard-administrador');
+})->name('dashboard-administrador');
+
+// Ruta para perfil de administrador
+Route::get('/perfil-administrador', function () {
+    return view('perfil-administrador');
+})->name('perfil-administrador');
+
 // Rutas para reset de contraseña
 Route::get('/forgot-password', [App\Http\Controllers\AuthController::class, 'showForgotForm'])->name('password.request');
 Route::post('/forgot-password', [App\Http\Controllers\AuthController::class, 'sendResetCodeWeb'])->name('password.email');

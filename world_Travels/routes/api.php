@@ -179,6 +179,12 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
     Route::delete('administradores/{id}', [AdministradorController::class, 'destroy'])->middleware('check.permission:eliminar_administradores');
     Route::post('administradores/logout', [AdministradorController::class, 'logout']);
     Route::get('administradores/me', [AdministradorController::class, 'me']);
+    
+    // Rutas para perfil del administrador autenticado
+    Route::get('admin/me', [AdministradorController::class, 'me']);
+    Route::put('admin/perfil', [AdministradorController::class, 'updateProfile']);
+    Route::delete('admin/foto-perfil', [AdministradorController::class, 'deletePhoto']);
+    Route::delete('admin/perfil', [AdministradorController::class, 'deleteProfile']);
 
     // CRUD Empresas con permisos
     Route::get('empresas', [EmpresaController::class, 'index'])->middleware('check.permission:gestionar_empresas');
