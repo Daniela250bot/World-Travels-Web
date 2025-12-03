@@ -305,7 +305,7 @@ class PermisosSeeder extends Seeder
 
         // Insertar permisos para cada rol
         $insertarPermisos($permisos_admin, 'administrador');
-        $insertarPermisos($permisos_empresa, 'empresa_viajes');
+        $insertarPermisos($permisos_empresa, 'empresas');
         $insertarPermisos($permisos_turista, 'turista');
     }
 }

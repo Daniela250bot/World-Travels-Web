@@ -34,13 +34,25 @@ class TuristaController extends Controller
                 ], 401);
             }
 
+            // Obtener datos adicionales según el rol desde la relación userable
+            $additionalData = [];
+            if ($user->userable) {
+                $additionalData = $user->userable->toArray();
+            } elseif ($user->role === 'turista') {
+                // Para turistas existentes sin userable, buscar en tabla usuarios
+                $usuarioLegacy = \App\Models\Usuarios::where('Email', $user->email)->first();
+                if ($usuarioLegacy) {
+                    $additionalData = $usuarioLegacy->toArray();
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'perfil' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'telefono' => $user->telefono,
+                    'telefono' => $user->telefono ?: $additionalData['Telefono'] ?? null,
                     'foto_perfil' => $user->foto_perfil ? asset('storage/' . $user->foto_perfil) : null,
                     'biografia' => $user->biografia,
                     'privacidad_perfil' => $user->privacidad_perfil,
@@ -48,6 +60,9 @@ class TuristaController extends Controller
                     'fecha_registro' => $user->created_at,
                     'total_fotos' => FotosViaje::where('id_usuario', $user->id)->count(),
                     'total_likes_recibidos' => FotosViaje::where('id_usuario', $user->id)->withCount('likes')->get()->sum('likes_count'),
+                    'nombre' => $user->nombre ?: $additionalData['Nombre'] ?? 'No especificado',
+                    'apellido' => $user->apellido ?: $additionalData['Apellido'] ?? 'No especificado',
+                    'nacionalidad' => $additionalData['Nacionalidad'] ?? 'No especificada',
                 ]
             ], 200);
         } catch (\Exception $e) {

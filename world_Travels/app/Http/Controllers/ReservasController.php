@@ -33,7 +33,7 @@ class ReservasController extends Controller
         ]);
 
         $validator = Validator::make($request->all(), [
-            'idUsuario'        => 'required|integer|exists:usuarios,id',
+            'idUsuario'        => 'required|integer|exists:users,id',
             'idActividad'      => 'required|integer|exists:actividades,id',
             'Numero_Personas'  => 'required|integer|min:1|max:10',
             'Estado'           => 'required|string|in:pendiente,confirmada,cancelada',
@@ -93,6 +93,8 @@ class ReservasController extends Controller
                     'userable_type' => $user->userable_type,
                     'userable_id' => $user->userable_id
                 ]);
+
+                $usuario = null; // Inicializar variable
 
                 // Primero verificar si ya tiene un perfil vinculado
                 if ($user->userable_type === 'App\\Models\\Usuarios' && $user->userable_id) {
@@ -247,13 +249,13 @@ class ReservasController extends Controller
                 Log::error('❌ Error notificando a administradores: ' . $e->getMessage());
             }
 
-            // Enviar email de confirmación al turista si la reserva es confirmada
-            if ($reserva->Estado === 'confirmada') {
-                try {
-                    Mail::to($reserva->usuario->email)->send(new ReservaConfirmadaMail($reserva));
-                } catch (\Exception $e) {
-                    Log::error('Error enviando email de confirmación al turista: ' . $e->getMessage());
-                }
+            // Enviar email de reserva exitosa al turista
+            try {
+                Log::info('📧 Enviando notificación de reserva exitosa al turista...');
+                Mail::to($reserva->usuario->email)->send(new ReservaConfirmadaMail($reserva));
+                Log::info('✅ Notificación enviada al turista');
+            } catch (\Exception $e) {
+                Log::error('❌ Error enviando email al turista: ' . $e->getMessage());
             }
 
             Log::info('✅ Reserva procesada exitosamente', [

@@ -73,6 +73,20 @@ class DatabaseSeeder extends Seeder
         );
         echo "Usuario empresa creado: {$empresaUser->email}\n";
 
+        // Crear registro en tabla usuarios (turistas) para la empresa
+        $empresaTurista = \App\Models\Usuarios::firstOrCreate(
+            ['Email' => 'empresa@test.com'],
+            [
+                'Nombre' => 'Empresa',
+                'Apellido' => 'Test',
+                'Email' => 'empresa@test.com',
+                'Contraseña' => bcrypt('password123'),
+                'Rol' => 'empresa',
+                'user_id' => $empresaUser->id
+            ]
+        );
+        echo "Registro empresa en tabla usuarios creado\n";
+
         // Crear usuario turista en tabla users
         $turistaUser = User::firstOrCreate(
             ['email' => 'turista@test.com'],
@@ -142,7 +156,7 @@ class DatabaseSeeder extends Seeder
             'Imagen' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
             'idCategoria' => $cultura->id,
             'idMunicipio' => $tunja->id,
-            'idUsuario' => $empresaUser->id
+            'idUsuario' => $empresaTurista->id
         ]);
 
         \App\Models\Actividades::create([

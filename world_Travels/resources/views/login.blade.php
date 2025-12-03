@@ -40,9 +40,17 @@
     @endif
 </head>
 <body class="bg-gray-100">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-6 rounded shadow max-w-md w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión - Empresa</h2>
+    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+        <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+            <div class="mb-4">
+                <a href="{{ route('home') }}" class="inline-flex items-center text-gray-600 hover:text-gray-800">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Volver al Inicio
+                </a>
+            </div>
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Iniciar Sesión</h2>
             <form id="login-form" method="POST" action="{{ route('web.login') }}">
                 @csrf
                 <div class="mb-4">
@@ -53,7 +61,7 @@
                     <label for="password" class="block mb-2">Contraseña</label>
                     <input type="password" id="password" name="password" class="w-full px-3 py-2 border rounded-md" autocomplete="current-password" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Iniciar Sesión</button>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Iniciar Sesión</button>
             </form>
             <p class="text-center mt-4">
                 <a href="{{ route('password.request') }}" class="text-blue-600">¿Olvidaste tu contraseña?</a>

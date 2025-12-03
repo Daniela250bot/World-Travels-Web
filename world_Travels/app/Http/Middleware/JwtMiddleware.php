@@ -49,26 +49,27 @@ class JwtMiddleware
     }
 
     /**
-     * Determinar qué guard usar basado en la ruta
-     */
-    private function determineGuard(Request $request): string
-{
-    $path = strtolower($request->path());
+     /**
+      * Determinar qué guard usar basado en la ruta
+      */
+     private function determineGuard(Request $request): string
+     {
+         $path = strtolower($request->path());
 
-    if (str_contains($path, 'empresas')) {
-        return 'api-empresas';
-    }
+         if (str_contains($path, 'empresas')) {
+             return 'api-empresas';
+         }
 
-    if (str_contains($path, 'administradores')) {
-        return 'api-administradores';
-    }
+         if (str_contains($path, 'administradores')) {
+             return 'api-administradores';
+         }
 
-    if (str_contains($path, 'usuarios')) {
-        return 'api-usuarios';
-    }
+         if (str_contains($path, 'usuarios')) {
+             return 'api-usuarios';
+         }
 
-    return 'api';
-}
+         return 'api';
+     }
 
 
 }

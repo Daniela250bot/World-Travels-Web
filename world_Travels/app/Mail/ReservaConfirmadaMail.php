@@ -29,7 +29,7 @@ class ReservaConfirmadaMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Confirmación de Reserva - World Travels',
+            subject: 'Reserva Exitosa - World Travels',
         );
     }
 

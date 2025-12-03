@@ -43,12 +43,14 @@ class RegistroController extends Controller
             'email' => 'required_if:rol,administrador,email|required_if:rol,turista,email|email|max:255',
             'telefono' => 'required_if:rol,turista|string|max:20',
             'nacionalidad' => 'required_if:rol,turista|string|max:255',
+            'nombre' => 'required_if:rol,turista|string|max:255|required_if:rol,empresa|string|max:255',
+            'apellido' => 'required_if:rol,turista|string|max:255',
             'numero' => 'required_if:rol,empresa|string|max:20',
             'direccion' => 'required_if:rol,empresa|string|max:255',
             'ciudad' => 'required_if:rol,empresa|string|max:255',
             'correo' => 'required_if:rol,empresa|string|email|max:255',
-            'contraseña' => 'required|string|min:8',
-            'password_confirmation' => 'required|string|min:8|same:contraseña',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|min:8|same:password',
         ]);
 
         // Debug: mostrar qué campos están llegando
@@ -139,7 +141,7 @@ class RegistroController extends Controller
                 'correo_electronico' => $data['email'],
                 'telefono' => $data['admin_telefono'],
                 'documento' => $data['documento'],
-                'contraseña' => Hash::make($data['contraseña']),
+                'contraseña' => Hash::make($data['password']),
                 'codigo_verificacion' => $codigoVerificacion,
             ]);
 
@@ -147,7 +149,7 @@ class RegistroController extends Controller
             $user = User::create([
                 'name' => $data['admin_name'] . ' ' . $data['admin_apellido'],
                 'email' => $data['email'],
-                'password' => Hash::make($data['contraseña']),
+                'password' => Hash::make($data['password']),
                 'role' => 'administrador',
                 'userable_type' => Administrador::class,
                 'userable_id' => $administrador->id, // Ahora sí existe
@@ -184,7 +186,7 @@ class RegistroController extends Controller
                 'direccion' => $data['direccion'],
                 'ciudad' => $data['ciudad'],
                 'correo' => $data['correo'],
-                'contraseña' => Hash::make($data['contraseña']),
+                'contraseña' => Hash::make($data['password']),
                 'codigo_verificacion' => $codigoVerificacion,
             ]);
 
@@ -192,7 +194,7 @@ class RegistroController extends Controller
             $user = User::create([
                 'name' => $data['nombre'],
                 'email' => $data['correo'],
-                'password' => Hash::make($data['contraseña']),
+                'password' => Hash::make($data['password']),
                 'role' => 'empresa',
                 'userable_type' => Empresa::class,
                 'userable_id' => $empresa->id, // Ahora sí existe
@@ -232,7 +234,7 @@ class RegistroController extends Controller
                 'Nombre' => $data['nombre'],
                 'Apellido' => $data['apellido'],
                 'Email' => $data['email'],
-                'Contraseña' => Hash::make($data['contraseña']),
+                'Contraseña' => Hash::make($data['password']),
                 'Telefono' => $data['telefono'],
                 'Nacionalidad' => $data['nacionalidad'],
                 'Fecha_Registro' => now(),
@@ -243,7 +245,7 @@ class RegistroController extends Controller
             $user = User::create([
                 'name' => $data['nombre'] . ' ' . $data['apellido'],
                 'email' => $data['email'],
-                'password' => Hash::make($data['contraseña']),
+                'password' => Hash::make($data['password']),
                 'role' => 'turista',
                 'userable_type' => Usuarios::class,
                 'userable_id' => $turista->id, // Ahora sí existe

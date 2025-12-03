@@ -1,63 +1,322 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Empresa - WORLD TRAVELS</title>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-gray-50">
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
-            <nav class="space-x-6">
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
-                <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
-                </form>
-            </nav>
-        </div>
-    </header>
+@extends('components.dashboard-layout')
 
-    <main class="container mx-auto px-4 py-12">
-        <div class="mb-8">
-            <h2 class="text-4xl font-bold text-center mb-4 text-gray-800">Panel de Empresa</h2>
-            <p class="text-center text-gray-600">Bienvenido, <span id="user-name" class="font-semibold"></span></p>
-        </div>
+@section('title', 'Empresa - WORLD TRAVELS')
 
-        <!-- Estadísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12" id="stats-section">
-            <!-- Estadísticas se cargarán aquí -->
-        </div>
+@section('nav-links')
+    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Dashboard</a>
+@endsection
 
-        <!-- Panel de acciones de empresa -->
-        <div class="bg-white rounded-xl shadow-lg p-8 mb-12">
-            <h3 class="text-2xl font-bold mb-6 text-gray-800">Panel de Empresa</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <button onclick="createActivity()" class="bg-blue-600 text-white p-6 rounded-lg hover:bg-blue-700 transition text-center">
-                    <h4 class="text-xl font-semibold mb-2">Crear Actividad</h4>
-                    <p>Añade nuevas experiencias turísticas</p>
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-green-600 via-teal-600 to-blue-700 text-white py-20 overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0" style="background-image: url('https://media.istockphoto.com/id/1289259699/es/vector/servicio-tur%C3%ADstico-con-gerente-de-empresas-de-viajes.jpg?s=612x612&w=0&k=20&c=UUoPpj1cHXREMWLTRkivZ5PrajIKnzFDiXxzdLsDXXI='); background-size: cover; background-position: center;"></div>
+        <div class="relative container mx-auto px-4 text-center">
+            <h1 class="text-5xl font-bold mb-4">Panel de Empresa</h1>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">Bienvenido, <span id="user-name" class="font-semibold"></span>. Gestiona tus actividades turísticas y conecta con viajeros apasionados.</p>
+            <div class="flex justify-center space-x-4">
+                <button onclick="createActivity()" class="bg-white text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                    Crear Nueva Actividad
                 </button>
-                <button onclick="manageActivities()" class="bg-green-600 text-white p-6 rounded-lg hover:bg-green-700 transition text-center">
-                    <h4 class="text-xl font-semibold mb-2">Gestionar Actividades</h4>
-                    <p>Edita tus actividades existentes</p>
-                </button>
-                <button onclick="viewReservations()" class="bg-yellow-600 text-white p-6 rounded-lg hover:bg-yellow-700 transition text-center">
-                    <h4 class="text-xl font-semibold mb-2">Ver Reservas</h4>
-                    <p>Revisa solicitudes de participantes</p>
+                <button onclick="viewReservations()" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-green-600 transition duration-300">
+                    Ver Reservas
                 </button>
             </div>
         </div>
-
-        <!-- Lista de actividades de la empresa -->
-        <div class="bg-white rounded-xl shadow-lg p-8" id="list-section">
-            <!-- Lista se cargará aquí -->
+        <div class="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 120" class="w-full h-12 fill-white">
+                <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+            </svg>
         </div>
+    </section>
+
+    <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
+        <div class="max-w-6xl mx-auto px-8 py-16 -mt-16 relative z-10">
+            <!-- Panel de Control Rápido -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+                <!-- Estadísticas rápidas -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8" id="stats-section">
+                    <!-- Estadísticas se cargarán aquí -->
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Acciones Rápidas
+                    </h3>
+                    <div class="space-y-4">
+                        <button onclick="createActivity()" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-2xl hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Nueva Actividad
+                        </button>
+                        <button onclick="manageActivities()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Gestionar Actividades
+                        </button>
+                        <button onclick="viewReservations()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-2xl hover:from-purple-700 hover:to-purple-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Ver Reservas
+                        </button>
+                        <button onclick="showSection('perfil')" class="w-full bg-gradient-to-r from-pink-600 to-pink-700 text-white px-6 py-4 rounded-2xl hover:from-pink-700 hover:to-pink-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Mi Perfil
+                        </button>
+                        <button onclick="showSection('empleados')" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-4 rounded-2xl hover:from-indigo-700 hover:to-indigo-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Gestionar Empleados
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secciones Principales -->
+            <div class="space-y-16">
+                <!-- Mis Actividades -->
+                <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-green-700 px-10 py-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-4xl font-bold text-white">Mis Actividades</h2>
+                                <p class="text-green-100 mt-2 text-lg">Gestiona tus experiencias turísticas y conecta con viajeros</p>
+                            </div>
+                            <button onclick="createActivity()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Crear Actividad
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-10" id="list-section">
+                        <!-- Lista se cargará aquí -->
+                    </div>
+                </section>
+
+                <!-- Reservas Recibidas -->
+                <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden" id="reservas-section" style="display: none;">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-10 py-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-4xl font-bold text-white">Reservas Recibidas</h2>
+                                <p class="text-blue-100 mt-2 text-lg">Gestiona las solicitudes de tus actividades</p>
+                            </div>
+                            <button onclick="volverAActividades()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                                Volver
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-10" id="reservas-content">
+                        <!-- Reservas se cargarán aquí -->
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Secciones Ocultas -->
+        <div class="hidden" id="perfil-section">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-pink-600 to-pink-700 px-10 py-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-4xl font-bold text-white">Mi Perfil de Empresa</h2>
+                            <p class="text-pink-100 mt-2 text-lg">Gestiona tu información empresarial</p>
+                        </div>
+                        <button onclick="volverAInicio()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            Volver
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-10">
+                    <!-- Información del Perfil -->
+                    <div id="perfil-view-mode" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Información Empresarial</h4>
+                                </div>
+                                <div class="space-y-2 text-gray-700">
+                                    <p><span class="font-medium">Nombre:</span> <span id="view-nombre">Cargando...</span></p>
+                                    <p><span class="font-medium">Número:</span> <span id="view-numero">Cargando...</span></p>
+                                    <p><span class="font-medium">Dirección:</span> <span id="view-direccion">Cargando...</span></p>
+                                    <p><span class="font-medium">Ciudad:</span> <span id="view-ciudad">Cargando...</span></p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Contacto</h4>
+                                </div>
+                                <div class="space-y-2 text-gray-700">
+                                    <p><span class="font-medium">Email:</span> <span id="view-correo">Cargando...</span></p>
+                                    <p><span class="font-medium">Teléfono:</span> <span id="view-telefono">Cargando...</span></p>
+                                    <p><span class="font-medium">Sitio Web:</span> <span id="view-sitio_web">Cargando...</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">Descripción</h4>
+                            </div>
+                            <p id="view-descripcion" class="text-gray-700 leading-relaxed">Cargando...</p>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200">
+                            <button onclick="entrarModoEdicionPerfil()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Editar Perfil
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modo Edición (oculto por defecto) -->
+                    <div id="perfil-edit-mode" class="hidden space-y-6">
+                        <div class="text-center mb-6">
+                            <h4 class="text-2xl font-bold text-gray-800">Editar Información Empresarial</h4>
+                            <p class="text-gray-600">Actualiza tu información de empresa</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                                <input type="text" id="perfil-nombre" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Número</label>
+                                <input type="text" id="perfil-numero" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
+                                <input type="text" id="perfil-direccion" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                                <input type="text" id="perfil-ciudad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                <input type="tel" id="perfil-telefono" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sitio Web</label>
+                                <input type="url" id="perfil-sitio_web" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                            <textarea id="perfil-descripcion" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Describe tu empresa..."></textarea>
+                        </div>
+
+                        <!-- Botones de Acción en Modo Edición -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200">
+                            <button onclick="guardarPerfilEmpresa()" class="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Guardar Cambios
+                            </button>
+                            <button onclick="cancelarEdicionPerfil()" class="bg-gray-500 text-white px-8 py-3 rounded-xl hover:bg-gray-600 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hidden" id="empleados-section">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-10 py-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-4xl font-bold text-white">Gestión de Empleados</h2>
+                            <p class="text-indigo-100 mt-2 text-lg">Administra el personal de tu empresa</p>
+                        </div>
+                        <button onclick="volverAInicio()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            Volver
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-10">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800">Empleados Actuales</h3>
+                        <button onclick="mostrarModalAsignarEmpleado()" class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Asignar Empleado
+                        </button>
+                    </div>
+
+                    <div id="empleados-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Empleados se cargarán aquí -->
+                    </div>
+
+                    <div id="empleados-empty" class="hidden text-center py-20 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl">
+                        <div class="text-indigo-400 text-8xl mb-6">👥</div>
+                        <h4 class="text-2xl font-semibold text-gray-700 mb-4">No tienes empleados asignados</h4>
+                        <p class="text-gray-600 mb-8 text-lg">¡Comienza a construir tu equipo!</p>
+                        <button onclick="mostrarModalAsignarEmpleado()" class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-10 py-4 rounded-2xl hover:from-indigo-700 hover:to-indigo-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 text-lg">
+                            Asignar Primer Empleado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
         <!-- Modal para crear actividad -->
         <div id="createActivityModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
@@ -121,399 +380,37 @@
         </div>
     </main>
 
-    <script>
-        // Guardar el token JWT en localStorage después del login
-        @if(isset($jwtToken) && $jwtToken)
-            localStorage.setItem('token', '{{ $jwtToken }}');
-            localStorage.setItem('user_role', 'empresa');
-        @endif
-
-        // Función auxiliar para hacer fetch con manejo automático de errores 401
-        function fetchWithAuth(url, options = {}) {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-                window.location.href = '{{ route("login") }}';
-                return Promise.reject(new Error('No token found'));
-            }
-
-            const headers = {
-                'Authorization': 'Bearer ' + token,
-                ...options.headers
-            };
-
-            return fetch(url, { ...options, headers })
-                .then(response => {
-                    if (response.status === 401) {
-                        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-                        localStorage.removeItem('token');
-                        window.location.href = '{{ route("login") }}';
-                        throw new Error('Unauthorized');
-                    }
-                    return response;
-                });
-        }
-
-        // Función auxiliar para obtener información del usuario/empresa autenticado
-        function getAuthenticatedUser() {
-            return fetchWithAuth('http://127.0.0.1:8000/api/empresas/me')
-            .then(response => response.json())
-            .catch(error => {
-                // Si falla como empresa, intentar como usuario regular
-                if (error.message === 'Token expired') {
-                    return fetchWithAuth('http://127.0.0.1:8000/api/me').then(r => r.json());
-                }
-                throw error;
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '{{ route("login") }}';
-                return;
-            }
-
-            loadUserData();
-            loadStats();
-            loadActivities();
-        });
-
-        function loadUserData() {
-            fetchWithAuth('http://127.0.0.1:8000/api/empresas/me')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('user-name').textContent = data.empresa.nombre;
-                }
-            })
-            .catch(error => {
-                console.error('Error cargando datos del usuario:', error);
-                // fetchWithAuth ya maneja la redirección en caso de 401
-            });
-        }
-
-        function loadStats() {
-            const statsSection = document.getElementById('stats-section');
-
-            // Obtener el ID de la empresa
-            fetchWithAuth('http://127.0.0.1:8000/api/empresas/me')
-            .then(response => response.json())
-            .then(userData => {
-                if (userData.success && userData.empresa) {
-                    const empresaId = userData.empresa.id;
-
-                    // Obtener estadísticas de la empresa
-                    Promise.all([
-                        fetchWithAuth(`http://127.0.0.1:8000/api/empresas/actividades`).then(r => r.json()),
-                        fetchWithAuth(`http://127.0.0.1:8000/api/empresas/reservas`).then(r => r.json())
-                    ])
-                    .then(([actividadesData, reservasData]) => {
-                        const totalActividades = actividadesData.success ? actividadesData.data.length : 0;
-                        const totalReservas = reservasData.success ? reservasData.data.length : 0;
-
-                        // Calcular reservas confirmadas
-                        const reservasConfirmadas = reservasData.success ?
-                            reservasData.data.filter(r => r.estado === 'confirmada').length : 0;
-
-                        statsSection.innerHTML = `
-                            <div class="bg-blue-50 p-6 rounded-lg text-center">
-                                <h3 class="text-2xl font-bold text-blue-600">${totalActividades}</h3>
-                                <p class="text-gray-600">Actividades Creadas</p>
-                            </div>
-                            <div class="bg-green-50 p-6 rounded-lg text-center">
-                                <h3 class="text-2xl font-bold text-green-600">${reservasConfirmadas}</h3>
-                                <p class="text-gray-600">Reservas Confirmadas</p>
-                            </div>
-                            <div class="bg-yellow-50 p-6 rounded-lg text-center">
-                                <h3 class="text-2xl font-bold text-yellow-600">${totalReservas}</h3>
-                                <p class="text-gray-600">Total Reservas</p>
-                            </div>
-                        `;
-                    })
-                    .catch(error => {
-                        console.error('Error cargando estadísticas:', error);
-                        statsSection.innerHTML = `
-                            <div class="bg-red-50 p-6 rounded-lg text-center">
-                                <h3 class="text-2xl font-bold text-red-600">Error</h3>
-                                <p class="text-gray-600">No se pudieron cargar las estadísticas</p>
-                            </div>
-                        `;
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error obteniendo datos de empresa:', error);
-                statsSection.innerHTML = `
-                    <div class="bg-red-50 p-6 rounded-lg text-center">
-                        <h3 class="text-2xl font-bold text-red-600">Error</h3>
-                        <p class="text-gray-600">No se pudieron cargar las estadísticas</p>
+    <!-- Modal para asignar empleado -->
+    <div id="asignarEmpleadoModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Asignar Nuevo Empleado</h3>
+                <form id="asignarEmpleadoForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">ID del Usuario</label>
+                        <input type="number" id="usuario_id" name="usuario_id" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <p class="text-xs text-gray-500 mt-1">Ingresa el ID del usuario que quieres asignar como empleado</p>
                     </div>
-                `;
-            });
-        }
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Rol</label>
+                        <select id="rol" name="rol" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Seleccionar rol</option>
+                            <option value="guia">Guía Turístico</option>
+                            <option value="recepcionista">Recepcionista</option>
+                            <option value="gerente">Gerente</option>
+                            <option value="operador">Operador</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" onclick="closeAsignarEmpleadoModal()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancelar</button>
+                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Asignar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-        function loadActivities() {
-            const listSection = document.getElementById('list-section');
-
-            // Obtener el ID de la empresa desde empresas/me
-            fetch('http://127.0.0.1:8000/api/empresas/me', {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(userData => {
-                if (userData.success && userData.empresa) {
-                    const empresaId = userData.empresa.id;
-
-                    // Cargar actividades de la empresa autenticada
-                    fetch(`http://127.0.0.1:8000/api/empresas/actividades`, {
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        let html = '<h3 class="text-2xl font-bold mb-6 text-gray-800">Mis Actividades</h3>';
-                        if (!data.success || data.data.length === 0) {
-                            html += '<p class="text-gray-600">No has creado actividades aún.</p>';
-                        } else {
-                            html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
-                            data.data.forEach(actividad => {
-                                html += `
-                                    <div class="border rounded-lg p-4">
-                                        <img src="${actividad.imagen || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'}" alt="${actividad.nombre}" class="w-full h-32 object-cover rounded mb-2" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'">
-                                        <h4 class="font-semibold">${actividad.nombre}</h4>
-                                        <p class="text-sm text-gray-600">${actividad.descripcion}</p>
-                                        <p class="text-sm">Precio: $${actividad.precio}</p>
-                                        <p class="text-sm">Cupo: ${actividad.cupo_maximo}</p>
-                                        <p class="text-sm">Reservas: ${actividad.total_reservas}/${actividad.cupo_maximo}</p>
-                                    </div>
-                                `;
-                            });
-                            html += '</div>';
-                        }
-                        listSection.innerHTML = html;
-                    })
-                    .catch(error => console.error('Error cargando actividades:', error));
-                }
-            })
-            .catch(error => console.error('Error obteniendo datos de empresa:', error));
-        }
-
-        // Funciones de acción
-        function createActivity() {
-            // Cargar categorías y municipios antes de mostrar el modal
-            Promise.all([
-                loadCategoriesForActivity(),
-                loadMunicipiosForActivity()
-            ]).then(() => {
-                document.getElementById('createActivityModal').classList.remove('hidden');
-            }).catch(error => {
-                console.error('Error cargando datos para crear actividad:', error);
-                alert('Error al cargar los datos necesarios para crear la actividad');
-            });
-        }
-
-        function manageActivities() {
-            loadActivities(); // Recargar la lista de actividades
-        }
-
-        function viewReservations() {
-            // Cargar reservas de la empresa autenticada
-            loadReservations();
-        }
-
-        function loadReservations() {
-            fetch(`http://127.0.0.1:8000/api/empresas/reservas`, {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const listSection = document.getElementById('list-section');
-                let html = '<h3 class="text-2xl font-bold mb-6 text-gray-800">Reservas Recibidas</h3>';
-
-                if (!data.success || data.data.length === 0) {
-                    html += '<p class="text-gray-600">No hay reservas aún.</p>';
-                } else {
-                    html += '<div class="overflow-x-auto">';
-                    html += '<table class="w-full table-auto border-collapse border border-gray-300">';
-                    html += '<thead><tr class="bg-gray-100"><th class="border border-gray-300 px-4 py-2">Actividad</th><th class="border border-gray-300 px-4 py-2">Usuario</th><th class="border border-gray-300 px-4 py-2">Personas</th><th class="border border-gray-300 px-4 py-2">Estado</th><th class="border border-gray-300 px-4 py-2">Total</th><th class="border border-gray-300 px-4 py-2">Acciones</th></tr></thead>';
-                    html += '<tbody>';
-
-                    data.data.forEach(reserva => {
-                        html += `
-                            <tr class="border-b">
-                                <td class="px-4 py-2">${reserva.actividad.nombre}</td>
-                                <td class="px-4 py-2">${reserva.usuario.nombre}</td>
-                                <td class="px-4 py-2">${reserva.numero_personas}</td>
-                                <td class="px-4 py-2">
-                                    <span class="px-2 py-1 rounded text-sm ${reserva.estado === 'confirmada' ? 'bg-green-100 text-green-800' : reserva.estado === 'cancelada' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
-                                        ${reserva.estado}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2">$${reserva.total}</td>
-                                <td class="px-4 py-2">
-                                    ${reserva.estado === 'pendiente' ? `
-                                        <button onclick="confirmarReserva(${reserva.id})" class="bg-green-500 text-white px-2 py-1 rounded text-sm mr-2">Confirmar</button>
-                                        <button onclick="cancelarReserva(${reserva.id})" class="bg-red-500 text-white px-2 py-1 rounded text-sm">Cancelar</button>
-                                    ` : 'N/A'}
-                                </td>
-                            </tr>
-                        `;
-                    });
-
-                    html += '</tbody></table></div>';
-                }
-
-                listSection.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error cargando reservas:', error);
-                alert('Error al cargar las reservas');
-            });
-        }
-
-        function confirmarReserva(reservaId) {
-            fetch(`http://127.0.0.1:8000/api/empresas/reservas/${reservaId}/confirmar`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Reserva confirmada exitosamente');
-                    viewReservations(); // Recargar lista
-                } else {
-                    alert('Error al confirmar reserva: ' + (result.message || 'Error desconocido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error confirmando reserva:', error);
-                alert('Error al confirmar la reserva');
-            });
-        }
-
-        function cancelarReserva(reservaId) {
-            fetch(`http://127.0.0.1:8000/api/empresas/reservas/${reservaId}/cancelar`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Reserva cancelada exitosamente');
-                    viewReservations(); // Recargar lista
-                } else {
-                    alert('Error al cancelar reserva: ' + (result.message || 'Error desconocido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error cancelando reserva:', error);
-                alert('Error al cancelar la reserva');
-            });
-        }
-
-        function loadCategoriesForActivity() {
-            return fetch('http://127.0.0.1:8000/api/categories/active')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('idCategoria');
-                    select.innerHTML = '<option value="">Seleccionar categoría</option>';
-                    if (Array.isArray(data)) {
-                        data.forEach(cat => {
-                            select.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
-                        });
-                    }
-                    return data;
-                })
-                .catch(error => {
-                    console.error('Error cargando categorías:', error);
-                    throw error;
-                });
-        }
-
-        function loadMunicipiosForActivity() {
-            return fetch('http://127.0.0.1:8000/api/listarMunicipios')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('idMunicipio');
-                    select.innerHTML = '<option value="">Seleccionar municipio</option>';
-                    data.forEach(mun => {
-                        select.innerHTML += `<option value="${mun.id}">${mun.Nombre_Municipio}</option>`;
-                    });
-                    return data;
-                })
-                .catch(error => {
-                    console.error('Error cargando municipios:', error);
-                    throw error;
-                });
-        }
-
-        function closeCreateActivityModal() {
-            document.getElementById('createActivityModal').classList.add('hidden');
-            document.getElementById('createActivityForm').reset();
-        }
-
-        // Event listener para el formulario de crear actividad
-        document.getElementById('createActivityForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Obtener el ID de la empresa
-            fetch('http://127.0.0.1:8000/api/empresas/me', {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(userData => {
-                if (userData.success && userData.empresa) {
-                    const empresaId = userData.empresa.id;
-
-                    const formData = new FormData(this);
-                    const data = Object.fromEntries(formData);
-
-                    fetch(`http://127.0.0.1:8000/api/empresas/actividades`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
-                        },
-                        body: JSON.stringify(data)
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            alert('Actividad creada exitosamente');
-                            closeCreateActivityModal();
-                            loadActivities(); // Recargar lista
-                            loadStats(); // Recargar estadísticas
-                        } else {
-                            alert('Error al crear actividad: ' + JSON.stringify(result.errors || result.message));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error creando actividad:', error);
-                        if (error.message !== 'Unauthorized') {
-                            alert('Error al crear actividad: ' + error.message);
-                        }
-                    });
-                } else {
-                    alert('Error: No se pudo obtener la información de la empresa');
-                }
-            })
-            .catch(error => {
-                console.error('Error obteniendo datos de empresa:', error);
-                alert('Error al obtener información de la empresa');
-            });
-        });
-    </script>
-</body>
-</html>
+@push('scripts')
+<script src="{{ asset('js/dashboard-empresa.js') }}"></script>
+@endpush
+@endsection

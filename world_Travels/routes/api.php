@@ -46,16 +46,9 @@ use App\Http\Middleware\JwtMiddleware;
     // Rutas temporalmente públicas para testing
     Route::post('logout', [AuthController::class, 'logout']);
 
-    // Rutas temporalmente públicas para testing
-    Route::get('listarReservas', [ReservasController::class, 'index']);
 
 
-// Rutas para Usuarios
-Route::get('listarUsuarios', [UsuariosController::class, 'index']);
-Route::post('crearUsuarios', [UsuariosController::class, 'store']);
-Route::get('usuarios/{id}', [UsuariosController::class, 'show']);
-Route::put('actualizarUsuarios/{id}', [UsuariosController::class, 'update']);
-Route::delete('eliminarUsuarios/{id}', [UsuariosController::class, 'destroy']);
+// Rutas para Usuarios (protegidas para administradores)
 
  // Rutas para Departamentos
 Route::get('listarDepartamentos', [DepartamentosController::class, 'index']);
@@ -91,7 +84,7 @@ Route::get('listarActividades', [ActividadesController::class, 'index']);
 Route::get('actividades/{id}', [ActividadesController::class, 'show']);
 
 // Rutas para Reservas
-// Route::get('listarReservas', [ReservasController::class, 'index']);
+Route::get('listarReservas', [ReservasController::class, 'index']);
 Route::get('reservas/verificar-disponibilidad', [ReservasController::class, 'verificarDisponibilidad']);
 Route::get('reservas/{id}', [ReservasController::class, 'show']);
 Route::delete('eliminarReservas/{id}', [ReservasController::class, 'destroy']);
@@ -147,27 +140,33 @@ Route::get('reportes/export-excel', [ReportesController::class, 'exportExcel']);
 Route::delete('eliminarMunicipios/{id}', [MunicipiosController::class, 'destroy']);
 
 // Rutas protegidas para Empresas (sin restricciones adicionales)
-Route::group(['middleware' => ['jwt.middleware']], function () {
-    // Rutas para empresas gestionando sus propias actividades y reservas
-    Route::get('empresas/me', [EmpresaController::class, 'me']);
-    Route::post('empresas/logout', [EmpresaController::class, 'logout']);
+Route::middleware(['jwt.middleware'])->prefix('empresas')->group(function () {
+    // Rutas para empresas gestionando su propio perfil
+    Route::get('me', [EmpresaController::class, 'me']);
+    Route::put('me', [EmpresaController::class, 'actualizarMiPerfil']);
+    Route::post('logout', [EmpresaController::class, 'logout']);
 
     // Gestión de actividades por empresa (para dashboard de empresa)
-    Route::get('empresas/actividades', [EmpresaController::class, 'listarActividades']);
-    Route::post('empresas/actividades', [EmpresaController::class, 'crearActividad']);
-    Route::get('empresas/actividades/{actividadId}', [EmpresaController::class, 'verActividad']);
-    Route::put('empresas/actividades/{actividadId}', [EmpresaController::class, 'actualizarActividad']);
-    Route::delete('empresas/actividades/{actividadId}', [EmpresaController::class, 'eliminarActividad']);
+    Route::get('actividades', [EmpresaController::class, 'listarActividades']);
+    Route::post('actividades', [EmpresaController::class, 'crearActividad']);
+    Route::get('actividades/{actividadId}', [EmpresaController::class, 'verActividad']);
+    Route::put('actividades/{actividadId}', [EmpresaController::class, 'actualizarActividad']);
+    Route::delete('actividades/{actividadId}', [EmpresaController::class, 'eliminarActividad']);
 
     // Rutas estándar de actividades para empresas (con validación de propiedad)
-    Route::post('empresas/crearActividades', [EmpresaController::class, 'crearActividadEmpresa']);
-    Route::put('empresas/actualizarActividades/{id}', [EmpresaController::class, 'actualizarActividadEmpresa']);
-    Route::delete('empresas/eliminarActividades/{id}', [EmpresaController::class, 'eliminarActividadEmpresa']);
+    Route::post('crearActividades', [EmpresaController::class, 'crearActividadEmpresa']);
+    Route::put('actualizarActividades/{id}', [EmpresaController::class, 'actualizarActividadEmpresa']);
+    Route::delete('eliminarActividades/{id}', [EmpresaController::class, 'eliminarActividadEmpresa']);
 
     // Gestión de reservas por empresa
-    Route::get('empresas/reservas', [EmpresaController::class, 'listarReservas']);
-    Route::put('empresas/reservas/{reservaId}/confirmar', [EmpresaController::class, 'confirmarReserva']);
-    Route::put('empresas/reservas/{reservaId}/cancelar', [EmpresaController::class, 'cancelarReserva']);
+    Route::get('reservas', [EmpresaController::class, 'listarReservas']);
+    Route::put('reservas/{reservaId}/confirmar', [EmpresaController::class, 'confirmarReserva']);
+    Route::put('reservas/{reservaId}/cancelar', [EmpresaController::class, 'cancelarReserva']);
+
+    // Gestión de empleados por empresa
+    Route::get('empleados', [EmpresaController::class, 'listarEmpleados']);
+    Route::post('empleados', [EmpresaController::class, 'asignarEmpleado']);
+    Route::delete('empleados/{usuarioId}', [EmpresaController::class, 'removerEmpleado']);
 });
 
 // Rutas protegidas para Administradores
@@ -188,8 +187,10 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
 
     // CRUD Empresas con permisos
     Route::get('empresas', [EmpresaController::class, 'index'])->middleware('check.permission:gestionar_empresas');
+    Route::post('empresas', [EmpresaController::class, 'store'])->middleware('check.permission:gestionar_empresas');
     Route::get('empresas/{id}', [EmpresaController::class, 'show'])->middleware('check.permission:gestionar_empresas');
     Route::put('empresas/{id}', [EmpresaController::class, 'update'])->middleware('check.permission:gestionar_empresas');
+    Route::put('empresas/{id}/toggle-status', [EmpresaController::class, 'toggleStatus'])->middleware('check.permission:gestionar_empresas');
     Route::delete('empresas/{id}', [EmpresaController::class, 'destroy'])->middleware('check.permission:gestionar_empresas');
 
     // Rutas adicionales para gestión de empresas desde panel administrador
@@ -206,6 +207,23 @@ Route::group(['middleware' => ['jwt.middleware']], function () {
     Route::get('admin/publicaciones', [TuristaController::class, 'obtenerTodasPublicaciones']);
     Route::delete('admin/publicaciones/{id}', [TuristaController::class, 'eliminarPublicacionModerador']);
     Route::get('admin/publicaciones/estadisticas', [TuristaController::class, 'obtenerEstadisticasPublicaciones']);
+
+    // CRUD Usuarios para administradores
+    Route::get('listarUsuarios', [UsuariosController::class, 'index']);
+    Route::post('crearUsuarios', [UsuariosController::class, 'store']);
+    Route::get('usuarios/{id}', [UsuariosController::class, 'show']);
+    Route::put('actualizarUsuarios/{id}', [UsuariosController::class, 'update']);
+    Route::delete('eliminarUsuarios/{id}', [UsuariosController::class, 'destroy']);
+
+    // CRUD Municipios para administradores
+    Route::get('municipios', [MunicipiosController::class, 'index']);
+    Route::post('municipios', [MunicipiosController::class, 'store']);
+    Route::get('municipios/{id}', [MunicipiosController::class, 'show']);
+    Route::put('municipios/{id}', [MunicipiosController::class, 'update']);
+    Route::delete('municipios/{id}', [MunicipiosController::class, 'destroy']);
+
+    // CRUD Reservas para administradores
+    Route::get('listarReservas', [ReservasController::class, 'index']);
 
 });
 

@@ -73,8 +73,23 @@ class AuthController extends Controller
             'codigo_verificacion' => null, // Limpiar después del registro
         ]);
 
+        // Crear registro en tabla users para autenticación centralizada
+        $user = User::create([
+            'name' => $request->Nombre . ' ' . $request->Apellido,
+            'email' => $request->Email,
+            'password' => Hash::make($request->Contraseña),
+            'role' => strtolower($request->Rol),
+            'userable_type' => 'App\Models\Usuarios',
+            'userable_id' => $usuarios->id,
+            'verificado' => true,
+            'telefono' => $request->Telefono,
+            'nombre' => $request->Nombre,
+            'apellido' => $request->Apellido,
+            'nacionalidad' => $request->Nacionalidad,
+        ]);
+
         try{
-            $token = JWTAuth::fromUser($usuarios);
+            $token = JWTAuth::fromUser($user);
             return response()->json([
             'success' => true,
             'usuario' => $usuarios,
@@ -264,11 +279,35 @@ class AuthController extends Controller
             $additionalData = [];
             if ($user->userable) {
                 $additionalData = $user->userable->toArray();
+            } elseif ($user->role === 'turista') {
+                // Para turistas existentes sin userable, buscar en tabla usuarios
+                $usuarioLegacy = Usuarios::where('Email', $user->email)->first();
+                if ($usuarioLegacy) {
+                    $additionalData = $usuarioLegacy->toArray();
+                }
             }
+
+            // Preparar datos del usuario con campos estandarizados
+            $usuarioData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'verificado' => $user->verificado,
+                'foto_perfil' => $user->foto_perfil,
+                'biografia' => $user->biografia,
+                'privacidad_perfil' => $user->privacidad_perfil,
+                'telefono' => $user->telefono ?: $additionalData['Telefono'] ?? $additionalData['telefono'] ?? null,
+                'Nombre' => $user->nombre ?: $additionalData['Nombre'] ?? 'No especificado',
+                'Apellido' => $user->apellido ?: $additionalData['Apellido'] ?? 'No especificado',
+                'Nacionalidad' => $user->nacionalidad ?: $additionalData['Nacionalidad'] ?? 'No especificada',
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ];
 
             return response()->json([
                 'success' => true,
-                'usuario' => array_merge($user->toArray(), $additionalData),
+                'usuario' => $usuarioData,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

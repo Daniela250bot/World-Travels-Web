@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Travels - Descubre Boyacá</title>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
@@ -14,7 +15,6 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
             <nav class="hidden md:flex space-x-6">
-                <a href="#inicio" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                 <a href="#sobre-nosotros" class="text-gray-700 hover:text-blue-600 transition">Sobre Nosotros</a>
                 <a href="#actividades" class="text-gray-700 hover:text-blue-600 transition">Actividades</a>
                 <a href="#contacto" class="text-gray-700 hover:text-blue-600 transition">Contacto</a>
@@ -106,9 +106,6 @@
                 <h2 class="text-4xl font-bold mb-8 text-gray-800">Actividades Turísticas</h2>
                 <div id="actividades-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Actividades se cargarán aquí con JavaScript -->
-                </div>
-                <div class="mt-8">
-                    <a href="{{ route('search') }}" class="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300">Ver Todas las Actividades</a>
                 </div>
             </div>
         </div>

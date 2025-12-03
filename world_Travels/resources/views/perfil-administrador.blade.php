@@ -378,6 +378,12 @@
             const contraseña = document.getElementById('perfil-contraseña').value;
             const confirmarContraseña = document.getElementById('perfil-confirmar-contraseña').value;
 
+            // Validación básica
+            if (!nombre.trim()) {
+                showNotification('El nombre es obligatorio', 'error');
+                return;
+            }
+
             // Validación de contraseñas
             if (contraseña && contraseña !== confirmarContraseña) {
                 showNotification('Las contraseñas no coinciden', 'error');
@@ -386,7 +392,7 @@
 
             const data = {
                 nombre: nombre,
-                apellido: apellido,
+                correo_electronico: document.getElementById('perfil-email').value, // Campo requerido
                 telefono: telefono
             };
 

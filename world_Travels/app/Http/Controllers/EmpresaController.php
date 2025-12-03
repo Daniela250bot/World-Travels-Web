@@ -47,20 +47,82 @@ class EmpresaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), Empresa::rules());
-
-        if ($validator->fails()) {
+        // Validación manual básica
+        if (!$request->has('nombre') || empty($request->nombre)) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
+                'errors' => ['nombre' => ['El nombre es requerido']],
+            ], 422);
+        }
+
+        if (!$request->has('correo') || empty($request->correo)) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['correo' => ['El correo es requerido']],
             ], 422);
         }
 
         try {
-            $data = $request->all();
-            $data['contraseña'] = Hash::make($request->contraseña);
+            // Solo permitir campos específicos y válidos
+            $data = [];
 
-            $empresa = Empresa::create($data);
+            if ($request->has('numero') && !empty($request->numero)) {
+                $data['numero'] = $request->numero;
+            }
+
+            if ($request->has('nombre') && !empty($request->nombre)) {
+                $data['nombre'] = $request->nombre;
+            }
+
+            if ($request->has('direccion') && !empty($request->direccion)) {
+                $data['direccion'] = $request->direccion;
+            }
+
+            if ($request->has('ciudad') && !empty($request->ciudad)) {
+                $data['ciudad'] = $request->ciudad;
+            }
+
+            if ($request->has('correo') && !empty($request->correo)) {
+                $data['correo'] = $request->correo;
+            }
+
+            // Estado siempre true por defecto para nuevas empresas
+            $data['estado'] = true;
+
+            // Generar contraseña si no se proporciona (para dashboard)
+            $password = $request->contraseña ?? 'password123';
+            $hashedPassword = Hash::make($password);
+
+            // Generar código de verificación si no se proporciona
+            $data['codigo_verificacion'] = Empresa::generarCodigoVerificacion();
+
+            // Crear o encontrar usuario en tabla users con rol 'empresa'
+            $user = \App\Models\User::firstOrCreate(
+                ['email' => $request->correo],
+                [
+                    'name' => $request->nombre,
+                    'password' => $hashedPassword,
+                    'role' => 'empresa',
+                    'verificado' => true
+                ]
+            );
+
+            // Agregar user_id a los datos de la empresa
+            $data['user_id'] = $user->id;
+            $data['contraseña'] = $hashedPassword;
+
+            // Crear empresa con campos explícitos
+            $empresa = new Empresa();
+            $empresa->user_id = $data['user_id'] ?? null;
+            $empresa->numero = $data['numero'] ?? null;
+            $empresa->nombre = $data['nombre'];
+            $empresa->direccion = $data['direccion'] ?? null;
+            $empresa->ciudad = $data['ciudad'] ?? null;
+            $empresa->correo = $data['correo'];
+            $empresa->contraseña = $data['contraseña'];
+            $empresa->codigo_verificacion = $data['codigo_verificacion'];
+            $empresa->estado = $data['estado'];
+            $empresa->save();
 
             return response()->json([
                 'success' => true,
@@ -137,6 +199,34 @@ class EmpresaController extends Controller
     }
 
     /**
+     * Toggle the status (active/blocked) of an empresa
+     */
+    public function toggleStatus($id)
+    {
+        try {
+            $empresa = Empresa::findOrFail($id);
+
+            $empresa->update([
+                'estado' => !$empresa->estado
+            ]);
+
+            $statusText = $empresa->estado ? 'activada' : 'bloqueada';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Empresa {$statusText} exitosamente",
+                'data' => $empresa,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cambiar estado de empresa',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
@@ -194,14 +284,38 @@ public function login(Request $request)
 {
     // Accept both 'contraseña' and 'password' for compatibility
     $data = $request->all();
+    \Log::info('Login data received:', $data);
+
+    // Handle different password field names due to encoding issues
+    if (isset($data['contrasea']) && !isset($data['contraseña'])) {
+        $data['contraseña'] = $data['contrasea'];
+    }
     if (isset($data['password']) && !isset($data['contraseña'])) {
         $data['contraseña'] = $data['password'];
     }
 
     $validator = Validator::make($data, [
         'correo' => 'required|string|email',
-        'contraseña' => 'required|string|min:8',
     ]);
+
+    // Validate password field (could be contraseña, contrasea, or password)
+    $passwordField = null;
+    if (isset($data['contraseña'])) {
+        $passwordField = 'contraseña';
+    } elseif (isset($data['contrasea'])) {
+        $passwordField = 'contrasea';
+    } elseif (isset($data['password'])) {
+        $passwordField = 'password';
+    }
+
+    if (!$passwordField || empty($data[$passwordField]) || strlen($data[$passwordField]) < 8) {
+        return response()->json([
+            'success' => false,
+            'errors' => [
+                'password' => ['La contraseña es requerida y debe tener al menos 8 caracteres.']
+            ],
+        ], 422);
+    }
 
     if ($validator->fails()) {
         return response()->json([
@@ -212,8 +326,8 @@ public function login(Request $request)
 
     // Get credentials with the correct field names for authentication
     $credentials = [
-        'correo' => $request->input('correo'),
-        'password' => $request->input('contraseña') ?: $request->input('password')
+        'correo' => $data['correo'],
+        'password' => $data['contrasea'] ?: $data['password'] ?? $data['contraseña']
     ];
 
     try {
@@ -276,14 +390,6 @@ public function login(Request $request)
                 ], 401);
             }
 
-            // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
-
             // Verificar que la empresa existe en la base de datos
             $empresaVerificada = Empresa::find($empresa->id);
             if (!$empresaVerificada) {
@@ -319,9 +425,144 @@ public function login(Request $request)
     }
 
     /**
+     * Actualizar el perfil de la empresa autenticada
+     */
+    public function actualizarMiPerfil(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'numero' => 'nullable|string|max:20|unique:empresas,numero,' . Auth::guard('api-empresas')->id(),
+            'nombre' => 'nullable|string|max:255',
+            'descripcion' => 'nullable|string|max:1000',
+            'direccion' => 'nullable|string|max:255',
+            'ciudad' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'sitio_web' => 'nullable|url|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $empresa = Auth::guard('api-empresas')->user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            // Verificar que el usuario autenticado sea efectivamente una empresa
+            if (!($empresa instanceof Empresa)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+                ], 403);
+            }
+
+            $empresa->update($request->only([
+                'numero', 'nombre', 'descripcion', 'direccion',
+                'ciudad', 'telefono', 'sitio_web'
+            ]));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil actualizado exitosamente',
+                'empresa' => $empresa,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el perfil',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar empleados de la empresa autenticada
+     */
+    public function listarEmpleados()
+    {
+        try {
+            $empresa = Auth::guard('api-empresas')->user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            $empleados = $empresa->empleados()->with('user')->get();
+
+            $empleadosFormateados = $empleados->map(function($empleado) {
+                return [
+                    'id' => $empleado->id,
+                    'nombre' => $empleado->Nombre . ' ' . $empleado->Apellido,
+                    'email' => $empleado->Email,
+                    'telefono' => $empleado->Telefono,
+                    'rol' => $empleado->Rol,
+                    'fecha_registro' => $empleado->created_at,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'empleados' => $empleadosFormateados,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar empleados',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remover empleado de la empresa
+     */
+    public function removerEmpleado($usuarioId)
+    {
+        try {
+            $empresa = Auth::guard('api-empresas')->user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
+            $empleado = $empresa->empleados()->findOrFail($usuarioId);
+
+            $empleado->update([
+                'empresa_id' => null,
+                'Rol' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado removido exitosamente',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al remover empleado',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Asignar empleado a empresa
      */
-    public function asignarEmpleado(Request $request, $empresaId)
+    public function asignarEmpleado(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'usuario_id' => 'required|exists:usuarios,id',
@@ -336,11 +577,19 @@ public function login(Request $request)
         }
 
         try {
-            $empresa = Empresa::findOrFail($empresaId);
+            $empresa = Auth::guard('api-empresas')->user();
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no autenticada',
+                ], 401);
+            }
+
             $usuario = \App\Models\Usuarios::findOrFail($request->usuario_id);
 
             $usuario->update([
-                'empresa_id' => $empresaId,
+                'empresa_id' => $empresa->id,
                 'Rol' => $request->rol,
             ]);
 
@@ -489,21 +738,13 @@ public function login(Request $request)
     {
         try {
             $empresa = Auth::guard('api-empresas')->user();
+
             if (!$empresa) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Empresa no autenticada',
                 ], 401);
             }
-
-            // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
-
             $actividades = $empresa->actividades()->with('categoria', 'municipio', 'reservas')->get();
 
             $actividadesFormateadas = $actividades->map(function($actividad) {
@@ -564,7 +805,7 @@ public function login(Request $request)
 
         try {
             // Obtener la empresa directamente del token JWT
-            $empresa = Auth::user();
+            $empresa = Auth::guard('api-empresas')->user();
 
             if (!$empresa) {
                 return response()->json([
@@ -572,14 +813,6 @@ public function login(Request $request)
                     'message' => 'Empresa no autenticada',
                 ], 401);
             }
-
-            // Verificar que el usuario autenticado sea efectivamente una empresa
-            // if (!($empresa instanceof Empresa)) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-            //     ], 403);
-            // }
 
             // Verificar que la empresa existe en la base de datos (doble verificación)
             $empresaVerificada = Empresa::find($empresa->id);
@@ -627,12 +860,12 @@ public function login(Request $request)
             }
 
             // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
+            // if (!($empresa instanceof Empresa)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+            //     ], 403);
+            // }
 
             $actividad = $empresa->actividades()->with('categoria', 'municipio', 'reservas.usuario')->findOrFail($actividadId);
 
@@ -684,12 +917,12 @@ public function login(Request $request)
             }
 
             // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
+            // if (!($empresa instanceof Empresa)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+            //     ], 403);
+            // }
 
             $actividad = $empresa->actividades()->findOrFail($actividadId);
 
@@ -724,12 +957,12 @@ public function login(Request $request)
             }
 
             // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
+            // if (!($empresa instanceof Empresa)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+            //     ], 403);
+            // }
 
             $actividad = $empresa->actividades()->findOrFail($actividadId);
 
@@ -772,12 +1005,12 @@ public function login(Request $request)
             }
 
             // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
+            // if (!($empresa instanceof Empresa)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
+            //     ], 403);
+            // }
 
             $reservas = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {
                 $query->where('empresa_id', $empresa->id);
@@ -831,14 +1064,6 @@ public function login(Request $request)
                 ], 401);
             }
 
-            // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
-            }
-
             $reserva = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {
                 $query->where('empresa_id', $empresa->id);
             })->findOrFail($reservaId);
@@ -871,14 +1096,6 @@ public function login(Request $request)
                     'success' => false,
                     'message' => 'Empresa no autenticada',
                 ], 401);
-            }
-
-            // Verificar que el usuario autenticado sea efectivamente una empresa
-            if (!($empresa instanceof Empresa)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Acceso denegado. Solo empresas pueden acceder a esta ruta',
-                ], 403);
             }
 
             $reserva = \App\Models\Reservas::whereHas('actividad', function($query) use ($empresa) {

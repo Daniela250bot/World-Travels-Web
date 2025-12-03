@@ -51,9 +51,6 @@
             <nav class="flex items-center space-x-6">
                 <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
                 @auth
-                    <div id="reservations-counter" class="hidden bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
-                        <span id="active-reservations-count">0</span> reservas activas
-                    </div>
                     <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
                     <button onclick="showSection('perfil')" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Mi Perfil</button>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
@@ -156,27 +153,6 @@
             </div>
         </section>
 
-        <!-- Sección de Mis Reservas (solo para usuarios autenticados) -->
-        @auth
-        <section id="my-reservations-section" class="mb-8">
-            <div class="bg-white p-6 rounded shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold text-gray-800">Mis Reservas</h3>
-                    <button onclick="toggleReservationsSection()" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                        <span id="toggle-text">Mostrar</span> Reservas
-                    </button>
-                </div>
-                <div id="reservations-container" class="hidden">
-                    <div id="reservations-loading" class="text-center py-4">
-                        <p class="text-gray-500">Cargando reservas...</p>
-                    </div>
-                    <div id="reservations-content">
-                        <!-- Las reservas se cargarán aquí -->
-                    </div>
-                </div>
-            </div>
-        </section>
-        @endauth
     </main>
 
     @php
@@ -224,10 +200,6 @@
             loadStats();
             loadCategorias();
 
-            // Cargar reservas y contador si el usuario está autenticado
-            if (isAuthenticated) {
-                loadReservationsCounter();
-            }
 
             document.getElementById('search-form').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -561,8 +533,6 @@
                     closeReservationModal();
                     // Limpiar formulario
                     document.getElementById('reservation-form').reset();
-                    // Actualizar contador de reservas
-                    loadReservationsCounter();
                 } else {
                     // Mostrar errores de validación específicos
                     if (data.errors) {
@@ -584,192 +554,6 @@
             });
         }
 
-        // Función para cargar el contador de reservas
-        function loadReservationsCounter() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            fetch('http://127.0.0.1:8000/api/turista/reservas', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const activeCount = data.reservas.proximas.length;
-                    updateReservationsCounter(activeCount);
-                }
-            })
-            .catch(error => console.error('Error cargando contador de reservas:', error));
-        }
-
-        // Función para actualizar el contador visual
-        function updateReservationsCounter(count) {
-            const counterElement = document.getElementById('reservations-counter');
-            const countElement = document.getElementById('active-reservations-count');
-
-            if (count > 0) {
-                countElement.textContent = count;
-                counterElement.classList.remove('hidden');
-            } else {
-                counterElement.classList.add('hidden');
-            }
-        }
-
-        // Función para alternar la visibilidad de la sección de reservas
-        function toggleReservationsSection() {
-            const container = document.getElementById('reservations-container');
-            const toggleText = document.getElementById('toggle-text');
-
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                toggleText.textContent = 'Ocultar';
-                loadUserReservations();
-            } else {
-                container.classList.add('hidden');
-                toggleText.textContent = 'Mostrar';
-            }
-        }
-
-        // Función para cargar las reservas del usuario
-        function loadUserReservations() {
-            const loadingElement = document.getElementById('reservations-loading');
-            const contentElement = document.getElementById('reservations-content');
-
-            loadingElement.classList.remove('hidden');
-            contentElement.innerHTML = '';
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                loadingElement.innerHTML = '<p class="text-red-500">Sesión expirada. Recarga la página.</p>';
-                return;
-            }
-
-            fetch('http://127.0.0.1:8000/api/turista/reservas', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                loadingElement.classList.add('hidden');
-
-                if (data.success) {
-                    displayUserReservations(data.reservas);
-                } else {
-                    contentElement.innerHTML = '<p class="text-red-500">Error al cargar las reservas.</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error cargando reservas:', error);
-                loadingElement.classList.add('hidden');
-                contentElement.innerHTML = '<p class="text-red-500">Error de conexión al cargar las reservas.</p>';
-            });
-        }
-
-        // Función para mostrar las reservas del usuario
-        function displayUserReservations(reservas) {
-            const contentElement = document.getElementById('reservations-content');
-
-            if (reservas.proximas.length === 0 && reservas.pasadas.length === 0) {
-                contentElement.innerHTML = '<p class="text-gray-500 text-center py-4">No tienes reservas aún.</p>';
-                return;
-            }
-
-            let html = '';
-
-            // Reservas próximas
-            if (reservas.proximas.length > 0) {
-                html += '<h4 class="text-lg font-semibold text-blue-600 mb-3">Próximas Reservas</h4>';
-                html += '<div class="space-y-3 mb-6">';
-                reservas.proximas.forEach(reserva => {
-                    html += createReservationCard(reserva);
-                });
-                html += '</div>';
-            }
-
-            // Reservas pasadas
-            if (reservas.pasadas.length > 0) {
-                html += '<h4 class="text-lg font-semibold text-green-600 mb-3">Reservas Pasadas</h4>';
-                html += '<div class="space-y-3">';
-                reservas.pasadas.forEach(reserva => {
-                    html += createReservationCard(reserva);
-                });
-                html += '</div>';
-            }
-
-            contentElement.innerHTML = html;
-        }
-
-        // Función para crear una tarjeta de reserva
-        function createReservationCard(reserva) {
-            const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES');
-            const hora = reserva.hora ? reserva.hora.substring(0, 5) : 'N/A';
-
-            let estadoClass = 'bg-gray-100 text-gray-800';
-            let estadoText = reserva.estado;
-
-            switch (reserva.estado) {
-                case 'confirmada':
-                    estadoClass = 'bg-green-100 text-green-800';
-                    estadoText = 'Confirmada';
-                    break;
-                case 'pendiente':
-                    estadoClass = 'bg-yellow-100 text-yellow-800';
-                    estadoText = 'Pendiente';
-                    break;
-                case 'cancelada':
-                    estadoClass = 'bg-red-100 text-red-800';
-                    estadoText = 'Cancelada';
-                    break;
-            }
-
-            return `
-                <div class="bg-gray-50 rounded-lg p-4 border">
-                    <div class="flex justify-between items-start mb-2">
-                        <h5 class="font-semibold text-gray-800">${reserva.actividad.nombre_actividad}</h5>
-                        <span class="px-2 py-1 rounded-full text-xs font-medium ${estadoClass}">${estadoText}</span>
-                    </div>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            ${fecha} a las ${hora}
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            ${reserva.actividad.ubicacion}
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            ${reserva.numero_personas} persona${reserva.numero_personas > 1 ? 's' : ''}
-                        </div>
-                        ${reserva.notas ? `
-                        <div class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            <span class="text-xs italic">${reserva.notas}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="mt-3 text-right">
-                        <span class="text-lg font-bold text-blue-600">$${reserva.actividad.precio * reserva.numero_personas}</span>
-                    </div>
-                </div>
-            `;
-        }
     </script>
 </body>
 </html>

@@ -186,12 +186,14 @@ class ActividadesController extends Controller
         $validator = Validator::make($request->all(), [
             'Nombre_Actividad' => 'nullable|string|max:255',
             'Descripcion'  => 'nullable|string',
-            'Fecha_Actividad' => 'nullable|string',
+            'Fecha_Actividad' => 'nullable|date',
             'Hora_Actividad' => 'nullable|string',
-            'Precio'       => 'nullable|string',
-            'Cupo_Maximo'  => 'nullable|string',
+            'Precio'       => 'nullable|numeric|min:0',
+            'Cupo_Maximo'  => 'nullable|integer|min:1',
             'Ubicacion'    => 'nullable|string|max:255',
-            'Imagen'       => 'nullable|string'
+            'Imagen'       => 'nullable|string',
+            'idCategoria'  => 'nullable|integer|exists:categories,id',
+            'idMunicipio'  => 'nullable|integer|exists:municipios,id'
         ]);
 
         if ($validator->fails()) {

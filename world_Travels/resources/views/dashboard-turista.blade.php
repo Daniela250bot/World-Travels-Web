@@ -1,328 +1,459 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Turista - WORLD TRAVELS</title>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+@extends('components.dashboard-layout')
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+@section('title', 'Dashboard Turista - WORLD TRAVELS')
 
-    <!-- FullCalendar CSS -->
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+@section('nav-links')
+    <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
+    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Inicio</a>
+    <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Perfil</a>
+@endsection
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+@push('styles')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <!-- Variable para JavaScript -->
-    <meta name="jwt-token" content="{{ session('jwt_token') }}">
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+@endpush
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+@push('scripts')
+<script src="{{ asset('js/dashboard-turista.js') }}"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+@endpush
 
-    <!-- FullCalendar JS -->
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-</head>
-<body class="bg-gray-50">
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">WORLD TRAVELS</h1>
-            <nav class="space-x-6">
-                <a href="{{ route('search') }}" class="text-gray-700 hover:text-blue-600 transition">Buscar Actividades</a>
-                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-blue-600 transition">Ininicio</a>
-                <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-blue-600 transition">Mi Perfil</a>
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="text-gray-700 hover:text-blue-600 transition bg-transparent border-none cursor-pointer">Cerrar Sesión</button>
-                </form>
-            </nav>
+@section('hero')
+<section class="relative bg-gradient-to-br from-blue-600 via-teal-500 to-green-500 text-white py-20 overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'); background-size: cover; background-position: center;"></div>
+    <div class="relative container mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold mb-4">¡Bienvenido a World Travels!</h1>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">Descubre las mejores experiencias turísticas en Boyacá. Explora empresas locales y reserva actividades inolvidables.</p>
+        <div class="flex justify-center space-x-4">
+            <button onclick="scrollToEmpresas()" class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                Explorar Empresas
+            </button>
+            <button onclick="document.getElementById('reservas-proximas').scrollIntoView({ behavior: 'smooth' })" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
+                Ver Mis Reservas
+            </button>
         </div>
-    </header>
+    </div>
+    <div class="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 120" class="w-full h-12 fill-white">
+            <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+        </svg>
+    </div>
+</section>
+@endsection
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-blue-600 via-teal-500 to-green-500 text-white py-20 overflow-hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
-        <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'); background-size: cover; background-position: center;"></div>
-        <div class="relative container mx-auto px-4 text-center">
-            <h1 class="text-5xl font-bold mb-4">¡Bienvenido a World Travels!</h1>
-            <p class="text-xl mb-8 max-w-2xl mx-auto">Descubre las mejores experiencias turísticas en Boyacá. Explora empresas locales y reserva actividades inolvidables.</p>
-            <div class="flex justify-center space-x-4">
-                <button onclick="scrollToEmpresas()" class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 transform hover:scale-105">
-                    Explorar Empresas
-                </button>
-                <button onclick="document.getElementById('reservas-proximas').scrollIntoView({ behavior: 'smooth' })" class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
-                    Ver Mis Reservas
-                </button>
-            </div>
-        </div>
-        <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 120" class="w-full h-12 fill-white">
-                <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
-            </svg>
-        </div>
-    </section>
-
-    <main class="container mx-auto px-4 py-12 -mt-12 relative z-10">
-        <!-- Estadísticas rápidas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" id="stats-section">
-            <!-- Estadísticas se cargarán aquí -->
-        </div>
-
-        <!-- Mis Reservas -->
-        <section class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Mis Reservas</h2>
-                <button onclick="showSection('reservas')" class="text-blue-600 hover:text-blue-800 text-lg font-medium">
-                    Ver todas →
-                </button>
-            </div>
-
-            <!-- Reservas Próximas -->
-            <div class="mb-12">
-                <h3 class="text-2xl font-semibold text-blue-600 mb-6">Próximas</h3>
-                <div id="reservas-proximas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Reservas próximas se cargarán aquí -->
+@section('content')
+<div class="max-w-6xl mx-auto px-8 py-16 -mt-16 relative z-10">
+            <!-- Panel de Control Rápido -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+                <!-- Estadísticas rápidas -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8" id="stats-section">
+                    <!-- Estadísticas se cargarán aquí -->
                 </div>
-                <div id="reservas-proximas-empty" class="hidden text-center py-12">
-                    <div class="text-gray-400 text-6xl mb-4">📅</div>
-                    <p class="text-gray-600 text-lg">No tienes reservas próximas</p>
-                    <p class="text-gray-500 mt-2">¡Explora nuestras actividades y reserva tu próxima aventura!</p>
-                </div>
-            </div>
 
-            <!-- Reservas Pasadas -->
-            <div>
-                <h3 class="text-2xl font-semibold text-green-600 mb-6">Asistidas</h3>
-                <div id="reservas-pasadas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Reservas pasadas se cargarán aquí -->
-                </div>
-                <div id="reservas-pasadas-empty" class="hidden text-center py-12">
-                    <div class="text-gray-400 text-6xl mb-4">✅</div>
-                    <p class="text-gray-600 text-lg">Aún no has asistido a ninguna actividad</p>
-                    <p class="text-gray-500 mt-2">¡Tu primera experiencia te espera!</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Mis Publicaciones -->
-        <section class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Mis Publicaciones</h2>
-                <button onclick="mostrarModalPublicacion()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
-                    ✏️ Nueva Publicación
-                </button>
-            </div>
-
-            <!-- Lista de Publicaciones -->
-            <div id="publicaciones-list" class="space-y-6">
-                <!-- Las publicaciones se cargarán aquí -->
-            </div>
-
-            <div id="publicaciones-empty" class="hidden text-center py-12">
-                <div class="text-gray-400 text-6xl mb-4">📝</div>
-                <p class="text-gray-600 text-lg">Aún no has creado ninguna publicación</p>
-                <p class="text-gray-500 mt-2">¡Comparte tus experiencias y momentos inolvidables!</p>
-                <button onclick="mostrarModalPublicacion()" class="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">
-                    Crear Primera Publicación
-                </button>
-            </div>
-        </section>
-
-        <!-- Feed de Publicaciones Públicas -->
-        <section class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Publicaciones de la Comunidad</h2>
-                <button onclick="loadPublicacionesPublicas()" class="text-blue-600 hover:text-blue-800 text-lg font-medium">
-                    🔄 Actualizar
-                </button>
-            </div>
-
-            <div id="publicaciones-publicas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Publicaciones públicas se cargarán aquí -->
-            </div>
-
-            <div id="publicaciones-publicas-empty" class="hidden text-center py-12">
-                <div class="text-gray-400 text-6xl mb-4">🌍</div>
-                <p class="text-gray-600 text-lg">No hay publicaciones públicas disponibles</p>
-                <p class="text-gray-500 mt-2">¡Sé el primero en compartir tus experiencias!</p>
-            </div>
-        </section>
-
-        <!-- Mapa Interactivo -->
-        <section class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Mapa Interactivo</h2>
-                <button onclick="centrarMapa()" class="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
-                    📍 Centrar en Boyacá
-                </button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-200">
-                    <p class="text-gray-600 mb-4">Explora las actividades disponibles en Boyacá. Haz clic en los marcadores para ver más detalles.</p>
-                    <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="filtro-empresa" checked class="mr-2">
-                            <span class="text-sm">Empresas</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="filtro-admin" checked class="mr-2">
-                            <span class="text-sm">Viajes por el Boyacá</span>
-                        </label>
-                        <select id="categoria-mapa" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
-                            <option value="">Todas las categorías</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="mapa-container" class="h-96 w-full">
-                    <!-- Mapa se cargará aquí -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Calendario de Actividades -->
-        <section class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Calendario de Actividades</h2>
-                <div class="flex gap-4">
-                    <button onclick="cambiarVistaCalendario('month')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
-                        Mes
-                    </button>
-                    <button onclick="cambiarVistaCalendario('week')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
-                        Semana
-                    </button>
-                    <button onclick="cambiarVistaCalendario('day')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-medium">
-                        Día
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-200">
-                    <div class="flex flex-wrap gap-6 mb-4">
-                        <div class="flex items-center">
-                            <div class="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-                            <span class="text-sm text-gray-600">Actividades Disponibles</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
-                            <span class="text-sm text-gray-600">Días Festivos</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-4 h-4 bg-purple-500 rounded mr-2"></div>
-                            <span class="text-sm text-gray-600">Mis Reservas</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-4">
-                        <select id="categoria-calendario" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
-                            <option value="">Todas las categorías</option>
-                        </select>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="mostrar-festivos" checked class="mr-2">
-                            <span class="text-sm">Mostrar días festivos</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="mostrar-reservas" checked class="mr-2">
-                            <span class="text-sm">Mostrar mis reservas</span>
-                        </label>
-                    </div>
-                </div>
-                <div id="calendario-container" class="p-4">
-                    <!-- Calendario se cargará aquí -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Empresas Activas -->
-        <section id="empresas-section" class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Empresas Destacadas</h2>
-                <div class="flex space-x-4">
-                    <select id="categoria-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Todas las categorías</option>
-                        <!-- Opciones se cargarán dinámicamente -->
-                    </select>
-                </div>
-            </div>
-            <div id="empresas-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Empresas se cargarán aquí -->
-            </div>
-        </section>
-
-        <!-- Viajes por el Boyacá -->
-        <section id="viajes-section" class="mb-16">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-4xl font-bold text-gray-800">Viajes por el Boyacá</h2>
-                <div class="flex space-x-4">
-                    <select id="viajes-categoria-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Todas las categorías</option>
-                        <!-- Opciones se cargarán dinámicamente -->
-                    </select>
-                </div>
-            </div>
-            <div id="viajes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Actividades de administradores se cargarán aquí -->
-            </div>
-        </section>
-
-
-        <!-- Actividades de Empresa (oculto inicialmente) -->
-        <section id="actividades-empresa-section" class="mb-16 hidden">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <button onclick="volverAEmpresas()" class="flex items-center text-blue-600 hover:text-blue-800 mb-2">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                <!-- Acciones Rápidas -->
+                <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Volver a Empresas
-                    </button>
-                    <h2 id="empresa-title" class="text-3xl font-bold text-gray-800">Actividades de [Empresa]</h2>
+                        Acciones Rápidas
+                    </h3>
+                    <div class="space-y-4">
+                        <button onclick="mostrarModalPublicacion()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Nueva Publicación
+                        </button>
+                        <button onclick="scrollToEmpresas()" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-2xl hover:from-green-700 hover:to-green-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Explorar Empresas
+                        </button>
+                        <button onclick="showSection('perfil')" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-2xl hover:from-purple-700 hover:to-purple-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center text-base">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Mi Perfil
+                        </button>
+                    </div>
                 </div>
-                <div class="flex space-x-4">
-                    <select id="actividad-categoria-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Todas las categorías</option>
-                    </select>
-                </div>
-            </div>
-            <div id="actividades-empresa-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Actividades se cargarán aquí -->
-            </div>
-        </section>
-
-        <!-- Sección de Reservas (oculta por defecto) -->
-        <section id="reservas-section" class="mb-16 hidden">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Mis Reservas</h2>
-                <button onclick="volverAInicio()" class="text-blue-600 hover:text-blue-800">Volver al inicio</button>
-            </div>
-            <div id="reservas-list" class="space-y-6">
-                <!-- Reservas se cargarán aquí -->
-            </div>
-        </section>
-
-        <!-- Sección de Perfil (oculta por defecto) -->
-        <section id="perfil-section" class="mb-16 hidden">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Mi Perfil</h2>
-                <button onclick="volverAInicio()" class="text-blue-600 hover:text-blue-800">Volver al inicio</button>
             </div>
 
-            <!-- Perfil del Usuario - Vista Principal -->
-            <div class="max-w-4xl mx-auto">
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-2xl p-8 border border-blue-100">
-                    <!-- Header del Perfil -->
-                    <div class="text-center mb-8">
-                        <div id="foto-perfil-container-view" class="relative inline-block mb-6">
-                            <img id="foto-perfil-preview-view" src="" alt="Foto de perfil"
-                                  class="w-40 h-40 rounded-full object-cover border-8 border-white shadow-xl mx-auto">
-                            <div id="foto-perfil-placeholder-view" class="w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-6xl mx-auto shadow-xl">
-                                U
+            <!-- Secciones Principales -->
+            <div class="space-y-16">
+                <!-- Mis Reservas -->
+                <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-10 py-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-4xl font-bold text-white">Mis Reservas</h2>
+                                <p class="text-blue-100 mt-2 text-lg">Gestiona tus experiencias turísticas</p>
+                            </div>
+                            <button onclick="showSection('reservas')" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 text-lg">
+                                Ver todas →
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-10">
+                        <!-- Reservas Próximas -->
+                        <div class="mb-12">
+                            <div class="flex items-center mb-8">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-3xl font-bold text-gray-800">Próximas Experiencias</h3>
+                            </div>
+                            <div id="reservas-proximas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <!-- Reservas próximas se cargarán aquí -->
+                            </div>
+                            <div id="reservas-proximas-empty" class="hidden text-center py-20 bg-gray-50 rounded-3xl">
+                                <div class="text-gray-400 text-8xl mb-6">🎯</div>
+                                <h4 class="text-2xl font-semibold text-gray-700 mb-4">No tienes aventuras próximas</h4>
+                                <p class="text-gray-600 mb-8 text-lg">¡Es hora de planificar tu próxima experiencia inolvidable!</p>
+                                <button onclick="scrollToEmpresas()" class="bg-blue-600 text-white px-10 py-4 rounded-2xl hover:bg-blue-700 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 text-lg">
+                                    Explorar Actividades
+                                </button>
                             </div>
                         </div>
-                        <h3 id="perfil-nombre-completo" class="text-4xl font-bold text-gray-800 mb-2">Usuario</h3>
-                        <p class="text-lg text-gray-600">Turista - WORLD TRAVELS</p>
+
+                        <!-- Reservas Pasadas -->
+                        <div>
+                            <div class="flex items-center mb-8">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-3xl font-bold text-gray-800">Experiencias Completadas</h3>
+                            </div>
+                            <div id="reservas-pasadas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <!-- Reservas pasadas se cargarán aquí -->
+                            </div>
+                            <div id="reservas-pasadas-empty" class="hidden text-center py-20 bg-gray-50 rounded-3xl">
+                                <div class="text-gray-400 text-8xl mb-6">🏆</div>
+                                <h4 class="text-2xl font-semibold text-gray-700 mb-4">Tu primera aventura te espera</h4>
+                                <p class="text-gray-600 text-lg">Cada experiencia es una historia por contar</p>
+                            </div>
+                        </div>
                     </div>
+                </section>
+
+                <!-- Mis Publicaciones -->
+                <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-10 py-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-4xl font-bold text-white">Mis Historias</h2>
+                                <p class="text-purple-100 mt-2 text-lg">Comparte tus experiencias con la comunidad</p>
+                            </div>
+                            <button onclick="mostrarModalPublicacion()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Crear Historia
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-10">
+                        <div id="publicaciones-list" class="space-y-10">
+                            <!-- Las publicaciones se cargarán aquí -->
+                        </div>
+
+                        <div id="publicaciones-empty" class="hidden text-center py-20 bg-gradient-to-br from-purple-50 to-blue-50 rounded-3xl">
+                            <div class="text-purple-400 text-8xl mb-6">📖</div>
+                            <h4 class="text-2xl font-semibold text-gray-700 mb-4">Tu libro de aventuras está vacío</h4>
+                            <p class="text-gray-600 mb-8 text-lg">¡Comparte tus experiencias y crea recuerdos inolvidables!</p>
+                            <button onclick="mostrarModalPublicacion()" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-10 py-4 rounded-2xl hover:from-purple-700 hover:to-purple-800 transition duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 text-lg">
+                                Comenzar a Escribir
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Comunidad -->
+                <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-green-700 px-10 py-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-4xl font-bold text-white">Comunidad WORLD TRAVELS</h2>
+                                <p class="text-green-100 mt-2 text-lg">Descubre las historias de otros viajeros</p>
+                            </div>
+                            <button onclick="loadPublicacionesPublicas()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-10">
+                        <div id="publicaciones-publicas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                            <!-- Publicaciones públicas se cargarán aquí -->
+                        </div>
+
+                        <div id="publicaciones-publicas-empty" class="hidden text-center py-20 bg-gradient-to-br from-green-50 to-blue-50 rounded-3xl">
+                            <div class="text-green-400 text-8xl mb-6">🌍</div>
+                            <h4 class="text-2xl font-semibold text-gray-700 mb-4">La comunidad está esperando tus historias</h4>
+                            <p class="text-gray-600 text-lg">¡Sé el primero en compartir tus aventuras!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+                <!-- Herramientas Interactivas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- Mapa Interactivo -->
+                    <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-green-600 to-green-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-4xl font-bold text-white">Mapa Interactivo</h2>
+                                    <p class="text-green-100 mt-2 text-lg">Descubre actividades cerca de ti</p>
+                                </div>
+                                <button onclick="centrarMapa()" class="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Centrar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-10">
+                            <div class="flex flex-wrap gap-6 mb-8">
+                                <div class="flex items-center bg-blue-50 px-4 py-3 rounded-2xl">
+                                    <input type="checkbox" id="filtro-empresa" checked class="mr-3 text-blue-600 w-4 h-4">
+                                    <span class="text-base font-medium text-blue-700">Empresas</span>
+                                </div>
+                                <div class="flex items-center bg-purple-50 px-4 py-3 rounded-2xl">
+                                    <input type="checkbox" id="filtro-admin" checked class="mr-3 text-purple-600 w-4 h-4">
+                                    <span class="text-base font-medium text-purple-700">Viajes por Boyacá</span>
+                                </div>
+                                <select id="categoria-mapa" class="px-6 py-3 border border-gray-300 rounded-2xl text-base focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    <option value="">Todas las categorías</option>
+                                </select>
+                            </div>
+                            <div id="mapa-container" class="h-96 w-full rounded-2xl overflow-hidden border border-gray-200">
+                                <!-- Mapa se cargará aquí -->
+                            </div>
+                            <p class="text-base text-gray-600 mt-6 flex items-center">
+                                <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Haz clic en los marcadores para ver detalles y reservar
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- Calendario de Actividades -->
+                    <section class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-4xl font-bold text-white">Calendario</h2>
+                                    <p class="text-blue-100 mt-2 text-lg">Planifica tus aventuras</p>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button onclick="cambiarVistaCalendario('month')" class="bg-white/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl hover:bg-white/30 transition duration-300 text-base font-medium">
+                                        Mes
+                                    </button>
+                                    <button onclick="cambiarVistaCalendario('week')" class="bg-white/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl hover:bg-white/30 transition duration-300 text-base font-medium">
+                                        Semana
+                                    </button>
+                                    <button onclick="cambiarVistaCalendario('day')" class="bg-white/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl hover:bg-white/30 transition duration-300 text-base font-medium">
+                                        Día
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-10">
+                            <div class="flex flex-wrap gap-6 mb-8">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                                    <span class="text-base text-gray-600 font-medium">Actividades</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                                    <span class="text-base text-gray-600 font-medium">Festivos</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-purple-500 rounded-full mr-3"></div>
+                                    <span class="text-base text-gray-600 font-medium">Mis Reservas</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-6 mb-8">
+                                <select id="categoria-calendario" class="px-6 py-3 border border-gray-300 rounded-2xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Todas las categorías</option>
+                                </select>
+                                <label class="flex items-center bg-green-50 px-4 py-3 rounded-2xl">
+                                    <input type="checkbox" id="mostrar-festivos" checked class="mr-3 text-green-600 w-4 h-4">
+                                    <span class="text-base font-medium text-green-700">Festivos</span>
+                                </label>
+                                <label class="flex items-center bg-purple-50 px-4 py-3 rounded-2xl">
+                                    <input type="checkbox" id="mostrar-reservas" checked class="mr-3 text-purple-600 w-4 h-4">
+                                    <span class="text-base font-medium text-purple-700">Mis Reservas</span>
+                                </label>
+                            </div>
+
+                            <div id="calendario-container" class="rounded-2xl overflow-hidden border border-gray-200">
+                                <!-- Calendario se cargará aquí -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Explorar Experiencias -->
+                <section class="space-y-12">
+                    <!-- Empresas Destacadas -->
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-4xl font-bold text-white">Empresas Destacadas</h2>
+                                    <p class="text-indigo-100 mt-2 text-lg">Descubre proveedores de experiencias únicas</p>
+                                </div>
+                                <select id="categoria-filter" class="px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-white/50 focus:border-white text-lg">
+                                    <option value="" class="text-gray-800">Todas las categorías</option>
+                                    <!-- Opciones se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-10">
+                            <div id="empresas-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                                <!-- Empresas se cargarán aquí -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Viajes por el Boyacá -->
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-4xl font-bold text-white">Viajes por el Boyacá</h2>
+                                    <p class="text-orange-100 mt-2 text-lg">Experiencias organizadas por la región</p>
+                                </div>
+                                <select id="viajes-categoria-filter" class="px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-white/50 focus:border-white text-lg">
+                                    <option value="" class="text-gray-800">Todas las categorías</option>
+                                    <!-- Opciones se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-10">
+                            <div id="viajes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                                <!-- Actividades de administradores se cargarán aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- Secciones Ocultas Mejoradas -->
+                <div class="hidden" id="actividades-empresa-section">
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <button onclick="volverAEmpresas()" class="bg-white/20 backdrop-blur-sm text-white p-4 rounded-2xl hover:bg-white/30 transition duration-300 mr-6">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div>
+                                        <h2 id="empresa-title" class="text-4xl font-bold text-white">Actividades de [Empresa]</h2>
+                                        <p class="text-teal-100 mt-2 text-lg">Explora todas las experiencias disponibles</p>
+                                    </div>
+                                </div>
+                                <select id="actividad-categoria-filter" class="px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-white/50 focus:border-white text-lg">
+                                    <option value="" class="text-gray-800">Todas las categorías</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-10">
+                            <div id="actividades-empresa-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                                <!-- Actividades se cargarán aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden" id="reservas-section">
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-cyan-600 to-cyan-700 px-10 py-8">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-4xl font-bold text-white">Todas Mis Reservas</h2>
+                                    <p class="text-cyan-100 mt-2 text-lg">Historial completo de tus experiencias</p>
+                                </div>
+                                <button onclick="volverAInicio()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center text-lg">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    Volver al Inicio
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-10">
+                            <div id="reservas-list" class="space-y-8">
+                                <!-- Reservas se cargarán aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden" id="perfil-section">
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-pink-600 to-pink-700 px-8 py-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-3xl font-bold text-white">Mi Perfil</h2>
+                                    <p class="text-pink-100 mt-1">Gestiona tu información personal</p>
+                                </div>
+                                <button onclick="volverAInicio()" class="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 transition duration-300 font-medium border border-white/30 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    Volver al Inicio
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-8">
+                            <!-- Perfil del Usuario - Vista Principal -->
+                            <div class="max-w-5xl mx-auto">
+                                <div class="bg-gradient-to-br from-pink-50 via-white to-purple-50 rounded-3xl shadow-xl border border-pink-100 overflow-hidden">
+                                    <!-- Header del Perfil -->
+                                    <div class="bg-gradient-to-r from-pink-500 to-purple-600 px-8 py-8 text-center">
+                                        <div id="foto-perfil-container-view" class="relative inline-block mb-6">
+                                            <img id="foto-perfil-preview-view" src="" alt="Foto de perfil"
+                                                   class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl mx-auto">
+                                            <div id="foto-perfil-placeholder-view" class="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-4xl mx-auto shadow-xl border-4 border-white/30">
+                                                U
+                                            </div>
+                                        </div>
+                                        <h3 id="perfil-nombre-completo" class="text-3xl font-bold text-white mb-2">Usuario</h3>
+                                        <p class="text-lg text-pink-100">Turista - WORLD TRAVELS</p>
+                                    </div>
+
+                                    <div class="p-8">
 
                     <!-- Información del Perfil en Modo Vista -->
                     <div id="perfil-view-mode" class="space-y-6">
@@ -490,8 +621,9 @@
                 </div>
             </div>
         </section>
-    </main>
+@endsection
 
+@section('modals')
     <!-- Modal de Reserva -->
     <div id="reserva-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -636,16 +768,40 @@
         </div>
     </div>
 
-    <script>
-        // ==================== CONFIGURACIÓN INICIAL ====================
-        const jwtToken = document.querySelector('meta[name="jwt-token"]').getAttribute('content');
-        if (jwtToken) {
-            localStorage.setItem('token', jwtToken);
-            localStorage.setItem('user_role', 'turista');
+@endsection
+
+        // ==================== UTILIDADES DE ANIMACIÓN ====================
+        function fadeIn(element, duration = 300) {
+            element.style.opacity = '0';
+            element.style.display = 'block';
+            element.style.transition = `opacity ${duration}ms ease-in-out`;
+
+            setTimeout(() => {
+                element.style.opacity = '1';
+            }, 10);
         }
 
-        let currentUser = null;
-        let currentEmpresa = null;
+        function fadeOut(element, duration = 300) {
+            element.style.transition = `opacity ${duration}ms ease-in-out`;
+            element.style.opacity = '0';
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, duration);
+        }
+
+        function smoothScrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showLoadingSpinner(element) {
+            element.innerHTML = `
+                <div class="flex items-center justify-center py-16">
+                    <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                    <span class="ml-4 text-gray-600 font-medium">Cargando...</span>
+                </div>
+            `;
+        }
 
         // Función global para cargar reservas completas
         function loadReservasCompletas() {
@@ -1052,12 +1208,15 @@
                 return;
             }
 
-            showLoading(empresasList, 'Cargando empresas...');
+            showLoadingSpinner(empresasList);
 
             console.log('Haciendo fetch a /api/listarEmpresas...');
             fetch('http://127.0.0.1:8000/api/listarEmpresas')
                 .then(response => {
                     console.log('Respuesta de empresas:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     return response.json();
                 })
                 .then(data => {
@@ -1075,11 +1234,25 @@
                         return;
                     }
                     console.log('Empresas a renderizar:', empresas.length);
+
+                    // Animación de entrada para las empresas
                     renderEmpresas(empresas, empresasList);
+                    setTimeout(() => {
+                        const cards = empresasList.querySelectorAll('.empresa-card');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.opacity = '0';
+                                card.style.transform = 'translateY(20px)';
+                                card.style.transition = 'all 0.3s ease-out';
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, index * 100);
+                        });
+                    }, 100);
                 })
                 .catch(error => {
                     console.error('Error cargando empresas:', error);
-                    showError(empresasList, 'Error al cargar empresas');
+                    showError(empresasList, 'Error al cargar empresas. Revisa tu conexión a internet.');
                 });
         }
 
@@ -1088,7 +1261,13 @@
             container.innerHTML = '';
 
             if (empresas.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-gray-500 text-lg">No hay empresas disponibles</p></div>';
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-16 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl">
+                        <div class="text-gray-400 text-6xl mb-4">🏢</div>
+                        <h4 class="text-xl font-semibold text-gray-700 mb-2">No hay empresas disponibles</h4>
+                        <p class="text-gray-600">Estamos trabajando para traerte las mejores experiencias</p>
+                    </div>
+                `;
                 console.log('No hay empresas para mostrar');
                 return;
             }
@@ -1096,6 +1275,9 @@
             empresas.forEach((empresa, index) => {
                 console.log(`Creando card para empresa ${index + 1}:`, empresa.nombre);
                 const empresaCard = createEmpresaCard(empresa);
+                empresaCard.classList.add('empresa-card');
+                empresaCard.style.opacity = '0';
+                empresaCard.style.transform = 'translateY(20px)';
                 container.appendChild(empresaCard);
             });
             console.log('Empresas renderizadas correctamente');
@@ -2427,24 +2609,37 @@
         }
 
         function showSection(section) {
-            // Ocultar todas las secciones existentes
-            const empresasSection = document.getElementById('empresas-section');
-            const actividadesEmpresaSection = document.getElementById('actividades-empresa-section');
-            const reservasSection = document.getElementById('reservas-section');
-            const perfilSection = document.getElementById('perfil-section');
+            // Ocultar todas las secciones existentes con animación
+            const allSections = ['empresas-section', 'actividades-empresa-section', 'reservas-section', 'perfil-section'];
 
-            if (empresasSection) empresasSection.classList.add('hidden');
-            if (actividadesEmpresaSection) actividadesEmpresaSection.classList.add('hidden');
-            if (reservasSection) reservasSection.classList.add('hidden');
-            if (perfilSection) perfilSection.classList.add('hidden');
+            allSections.forEach(sectionId => {
+                const sectionElement = document.getElementById(sectionId);
+                if (sectionElement && !sectionElement.classList.contains('hidden')) {
+                    fadeOut(sectionElement, 200);
+                }
+            });
 
-            // Mostrar la sección seleccionada
-            const selectedSection = document.getElementById(section + '-section');
-            if (selectedSection) {
-                selectedSection.classList.remove('hidden');
-                // Scroll suave a la sección
-                selectedSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            // Mostrar la sección seleccionada con animación
+            setTimeout(() => {
+                allSections.forEach(sectionId => {
+                    const sectionElement = document.getElementById(sectionId);
+                    if (sectionElement) {
+                        if (sectionId === section + '-section') {
+                            fadeIn(sectionElement, 300);
+                        } else {
+                            sectionElement.classList.add('hidden');
+                        }
+                    }
+                });
+
+                // Scroll suave a la sección después de mostrarla
+                setTimeout(() => {
+                    const selectedSection = document.getElementById(section + '-section');
+                    if (selectedSection) {
+                        smoothScrollToTop();
+                    }
+                }, 100);
+            }, 200);
 
             // Cargar contenido según la sección
             switch(section) {
@@ -2455,10 +2650,10 @@
                     // Las actividades se cargan al hacer clic en una empresa
                     break;
                 case 'reservas':
-                    loadReservasCompletas(); // Carga todas las reservas en la sección dedicada
+                    setTimeout(() => loadReservasCompletas(), 300); // Carga todas las reservas en la sección dedicada
                     break;
                 case 'perfil':
-                    loadPerfil();
+                    setTimeout(() => loadPerfil(), 300);
                     break;
             }
         }

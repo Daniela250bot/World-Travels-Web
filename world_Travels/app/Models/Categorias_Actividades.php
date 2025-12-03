@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Categorias_Actividades extends Model
 {
-    protected $table = 'categorias_actividades';
+    protected $table = 'categorias__actividades';
     protected $fillable = [
         'Nombre_Categoria',
         'Descripcion'
